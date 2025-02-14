@@ -34,4 +34,3 @@ export const registry = {
   ...resolverRegistry,
   [`${appName}/services/page-title`]: PageTitleService,
 };
-console.log(registry);
