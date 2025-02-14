@@ -34,10 +34,16 @@ export class DynamicTable extends Component<{
     }
 
     return rows.filter((row) => {
-      return Object.entries(filters).every(([header, filters]) => {
+      return Object.entries(filters).every(([filterName, filters]) => {
         if (filters.length === 0) return true;
 
-        const hIndex = headers.indexOf(header);
+        if (filterName.endsWith('-search')) {
+          const headerName = filterName.replace(/-search$/, '');
+          const hIndex = headers.indexOf(headerName);
+          return row[hIndex]?.includes(filters);
+        }
+
+        const hIndex = headers.indexOf(filterName);
         return filters.some((filter) => row[hIndex]?.includes(filter));
       });
     });

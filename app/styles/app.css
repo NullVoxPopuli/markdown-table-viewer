@@ -55,9 +55,14 @@ select {
       }
     }
 
-    select {
+    select, input {
       background: var(--dark-bg);
       color: var(--dark-fg);
+    }
+
+    input {
+      display: inline-block;
+      border: 1px solid var(--dark-fg);
     }
   }
 
@@ -130,6 +135,15 @@ table {
 .dynamic-filter {
   display: inline-grid;
   gap: 0.5rem;
+
+  > span {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    input {
+      max-width: 50px;
+    }
+  }
 
 }
 
