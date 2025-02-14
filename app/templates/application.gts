@@ -1,14 +1,11 @@
 import { Form } from 'ember-primitives/components/form';
+import { on } from '@ember/modifier';
 import { Header } from '#components/header.gts';
 import type { TOC } from '@ember/component/template-only';
 import { pageTitle } from 'ember-page-title';
 import type { Model } from '#routes/application.ts';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
-
-function filter(data: string[][], headers: string[], filters: object) {
-  return data;
-}
 
 class Filters extends Component<{
   column: string;
@@ -43,8 +40,8 @@ class DynamicTable extends Component<{ headers: string[]; rows: string[][] }> {
 
   handleChange = (newValues: unknown) => {
     this.filters = newValues as FormFilters;
-    console.log('filters', this.filters);
   };
+  clear = () => (this.filters = {});
 
   get filtered() {
     const { rows, headers } = this.args;
@@ -53,21 +50,12 @@ class DynamicTable extends Component<{ headers: string[]; rows: string[][] }> {
       return rows;
     }
 
-    console.log('trying to filter');
-
     return rows.filter((row) => {
-      return row.every((column, index) => {
-        const header = headers[index];
+      return Object.entries(this.filters).every(([header, filters]) => {
+        if (filters.length === 0) return true;
 
-        if (!header) return true;
-
-        const filter = this.filters[header];
-        console.log('1', this.filters, filter);
-
-        if (!filter) return true;
-        if (filter?.length === 0) return true;
-
-        return filter.some((filter) => filter === column);
+        const hIndex = headers.indexOf(header);
+        return filters.some((filter) => row[hIndex]?.includes(filter));
       });
     });
   }
@@ -78,9 +66,12 @@ class DynamicTable extends Component<{ headers: string[]; rows: string[][] }> {
     <section class="filters">
       <h2>Filters</h2>
       <Form @onChange={{this.handleChange}}>
-        {{#each @headers as |header|}}
-          <Filters @column={{header}} @headers={{@headers}} @rows={{@rows}} />
-        {{/each}}
+        <div>
+          {{#each @headers as |header|}}
+            <Filters @column={{header}} @headers={{@headers}} @rows={{@rows}} />
+          {{/each}}
+        </div>
+        <input type="reset" value="Clear" {{on "click" this.clear}} />
       </Form>
     </section>
 

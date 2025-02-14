@@ -4,7 +4,7 @@ export const Header = <template>
   <header>
     <span>
       <LinkTo @route="application" class="home-link">
-        table.md.viewer
+        table.md viewer
       </LinkTo>
       <span>
         <a
