@@ -21,7 +21,9 @@
     "lint:hbs:fix": "ember-template-lint . --fix",
     "lint:js": "eslint . --cache",
     "lint:js:fix": "eslint . --fix",
-    "start": "vite"
+    "start": "vite",
+    "test:vitest": "vitest run",
+    "test:qunit": ""
   },
   "devDependencies": {
     "@babel/core": "^7.26.8",

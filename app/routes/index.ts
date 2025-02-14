@@ -35,12 +35,22 @@ export default class IndexRoute extends Route {
   async model({ file, key }: { file: string; key: string }): Promise<Model> {
     console.log('Parsed QPs', { file, key });
 
-    const response = await fetch(file);
-    const text = await response.text();
+    try {
+      const response = await fetch(file);
+      if (response.status >= 400) {
+        this.router.transitionTo(
+          `/error?error=Could not load file :( \n Status ${response.status}.`
+        );
+        return;
+      }
+      const text = await response.text();
 
-    const data = findTable(text, key);
+      const data = findTable(text, key);
 
-    return { data, file };
+      return { data, file };
+    } catch (e) {
+      this.router.transitionTo(`/error?error=${e}`);
+    }
   }
 }
 
