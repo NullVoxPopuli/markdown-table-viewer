@@ -41,9 +41,9 @@ interface FormFilters {
 class DynamicTable extends Component<{ headers: string[]; rows: string[][] }> {
   @tracked declare filters: FormFilters;
 
-  handleChange = (newValues: FormFilters) => {
-    console.log(newValues);
-    this.filters = newValues;
+  handleChange = (newValues: unknown) => {
+    this.filters = newValues as FormFilters;
+    console.log('filters', this.filters);
   };
 
   get filtered() {
@@ -73,7 +73,7 @@ class DynamicTable extends Component<{ headers: string[]; rows: string[][] }> {
   }
 
   <template>
-    {{log this.filters}}
+    {{log "reactive this.filters" this.filters}}
 
     <section class="filters">
       <h2>Filters</h2>

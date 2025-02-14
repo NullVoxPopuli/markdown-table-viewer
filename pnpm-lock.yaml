@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: false
   excludeLinksFromLockfile: false
 
+overrides:
+  '@glimmer/validator': '>= 0.92.0'
+
 importers:
 
   .:
@@ -35,7 +38,7 @@ importers:
         version: 4.0.0-alpha.1(@glint/template@1.4.1-unstable.34c4510)
       '@embroider/vite':
         specifier: ^1.0.0-alpha.0
-        version: 1.0.0-alpha.1(@embroider/core@4.0.0-alpha.1(@glint/template@1.4.1-unstable.34c4510))(@glint/template@1.4.1-unstable.34c4510)(rollup@4.34.6)(vite@6.1.0(@types/node@22.13.2)(terser@5.39.0))
+        version: 1.0.0-alpha.1(@embroider/core@4.0.0-alpha.1(@glint/template@1.4.1-unstable.34c4510))(@glint/template@1.4.1-unstable.34c4510)(rollup@4.34.6)(vite@6.1.0(@types/node@22.13.4)(terser@5.39.0))
       '@glimmer/component':
         specifier: ^2.0.0
         version: 2.0.0
@@ -94,20 +97,20 @@ importers:
         specifier: ^9.20.1
         version: 9.20.1
       prettier:
-        specifier: ^3.4.2
+        specifier: ^3.5.1
         version: 3.5.1
       prettier-plugin-ember-template-tag:
         specifier: ^2.0.4
         version: 2.0.4(prettier@3.5.1)
       tracked-built-ins:
-        specifier: ^3.4.0
-        version: 3.4.0(@babel/core@7.26.8)
+        specifier: ^4.0.0
+        version: 4.0.0(@babel/core@7.26.8)
       typescript:
         specifier: ^5.7.3
         version: 5.7.3
       vite:
-        specifier: ^6.0.0
-        version: 6.1.0(@types/node@22.13.2)(terser@5.39.0)
+        specifier: ^6.1.0
+        version: 6.1.0(@types/node@22.13.4)(terser@5.39.0)
 
 packages:
 
@@ -1065,12 +1068,6 @@ packages:
   '@glimmer/util@0.92.3':
     resolution: {integrity: sha512-K1oH93gGU36slycxJ9CcFpUTsdOc4XQ6RuZFu5oRsxFYtEF5PSu7ik11h58fyeoaWOr1ebfkyAMawbeI2AJ5GA==}
 
-  '@glimmer/validator@0.44.0':
-    resolution: {integrity: sha512-i01plR0EgFVz69GDrEuFgq1NheIjZcyTy3c7q+w7d096ddPVeVcRzU3LKaqCfovvLJ+6lJx40j45ecycASUUyw==}
-
-  '@glimmer/validator@0.84.3':
-    resolution: {integrity: sha512-RTBV4TokUB0vI31UC7ikpV7lOYpWUlyqaKV//pRC4pexYMlmqnVhkFrdiimB/R1XyNdUOQUmnIAcdic39NkbhQ==}
-
   '@glimmer/validator@0.92.3':
     resolution: {integrity: sha512-HKrMYeW0YhiksSeKYqX2chUR/rz82j12DcY7p2dORQlTV3qlAfiE5zRTJH1KRA1X3ZMf7DI2/GOzkXwYp0o+3Q==}
 
@@ -1409,8 +1406,8 @@ packages:
   '@types/minimatch@5.1.2':
     resolution: {integrity: sha512-K0VQKziLUWkVKiRVrx4a40iPaxTUefQmjtkQofBkYRcoaaL/8rhwDWww9qWbrgicNOgnpIsMxyNIUM4+n6dUIA==}
 
-  '@types/node@22.13.2':
-    resolution: {integrity: sha512-Z+r8y3XL9ZpI2EY52YYygAFmo2/oWfNSj4BCpAXE2McAexDk8VcnBMGC9Djn9gTKt4d2T/hhXqmPzo4hfIXtTg==}
+  '@types/node@22.13.4':
+    resolution: {integrity: sha512-ywP2X0DYtX3y08eFVx5fNIw7/uIv8hYUKgXoK8oayJlLnKcRfEYCxWMVE1XagUdVtCJlZT1AU4LXEABW+L1Peg==}
 
   '@types/qs@6.9.18':
     resolution: {integrity: sha512-kK7dgTYDyGqS+e2Q4aK9X3D7q234CIZ1Bv0q/7Z5IwRDoADNU81xXJK/YVyLbLTZCoIwUoDoffFeF+p/eIklAA==}
@@ -2605,8 +2602,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  electron-to-chromium@1.5.98:
-    resolution: {integrity: sha512-bI/LbtRBxU2GzK7KK5xxFd2y9Lf9XguHooPYbcXWy6wUoT8NMnffsvRhPmSeUHLSDKAEtKuTaEtK4Ms15zkIEA==}
+  electron-to-chromium@1.5.99:
+    resolution: {integrity: sha512-77c/+fCyL2U+aOyqfIFi89wYLBeSTCs55xCZL0oFH0KjqsvSvyh6AdQ+UIl1vgpnQQE6g+/KK8hOIupH6VwPtg==}
 
   ember-async-data@1.0.3:
     resolution: {integrity: sha512-54OtoQwNi+/ZvPOVuT4t8fcHR9xL8N7kBydzcZSo6BIEsLYeXPi3+jUR8niWjfjXXhKlJ8EWXR0lTeHleTrxbw==}
@@ -5392,6 +5389,9 @@ packages:
   tracked-built-ins@3.4.0:
     resolution: {integrity: sha512-aRwWQXC3VkY50oYxS7wKZiavkjf3uaN+UYUH30D5gxUqbxDN2LnNsfWyDfckmxHUGw4gJDH5lpRS0jX/tim0vw==}
 
+  tracked-built-ins@4.0.0:
+    resolution: {integrity: sha512-0Jl43A1SDZd+yYCJvXfgDSn4Wk/zcawkyFTBPqOETU5UJRngnVEnQ8oOjawqPRg6qja3sKjIQ8z6X9xJzcUTUA==}
+
   tracked-toolbox@2.0.0:
     resolution: {integrity: sha512-adZtX+RGN6F+pWs/5JqVuDxLhuia4uhqmQp+UlUaxpykWjDFETtAdQR+LdDJiFPXFAXnS6FBqn/tnSLJQCm3Yw==}
     engines: {node: 14.* || 16.* || >= 18}
@@ -6841,7 +6841,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@embroider/vite@1.0.0-alpha.1(@embroider/core@4.0.0-alpha.1(@glint/template@1.4.1-unstable.34c4510))(@glint/template@1.4.1-unstable.34c4510)(rollup@4.34.6)(vite@6.1.0(@types/node@22.13.2)(terser@5.39.0))':
+  '@embroider/vite@1.0.0-alpha.1(@embroider/core@4.0.0-alpha.1(@glint/template@1.4.1-unstable.34c4510))(@glint/template@1.4.1-unstable.34c4510)(rollup@4.34.6)(vite@6.1.0(@types/node@22.13.4)(terser@5.39.0))':
     dependencies:
       '@babel/core': 7.26.8
       '@embroider/core': 4.0.0-alpha.1(@glint/template@1.4.1-unstable.34c4510)
@@ -6859,7 +6859,7 @@ snapshots:
       send: 0.18.0
       source-map-url: 0.4.1
       terser: 5.39.0
-      vite: 6.1.0(@types/node@22.13.2)(terser@5.39.0)
+      vite: 6.1.0(@types/node@22.13.4)(terser@5.39.0)
     transitivePeerDependencies:
       - '@glint/template'
       - bufferutil
@@ -7102,7 +7102,7 @@ snapshots:
       '@glimmer/global-context': 0.84.3
       '@glimmer/interfaces': 0.84.3
       '@glimmer/util': 0.84.3
-      '@glimmer/validator': 0.84.3
+      '@glimmer/validator': 0.92.3
 
   '@glimmer/reference@0.92.3':
     dependencies:
@@ -7145,7 +7145,7 @@ snapshots:
   '@glimmer/tracking@1.1.2':
     dependencies:
       '@glimmer/env': 0.1.7
-      '@glimmer/validator': 0.44.0
+      '@glimmer/validator': 0.92.3
 
   '@glimmer/util@0.84.3':
     dependencies:
@@ -7157,13 +7157,6 @@ snapshots:
     dependencies:
       '@glimmer/env': 0.1.7
       '@glimmer/interfaces': 0.92.3
-
-  '@glimmer/validator@0.44.0': {}
-
-  '@glimmer/validator@0.84.3':
-    dependencies:
-      '@glimmer/env': 0.1.7
-      '@glimmer/global-context': 0.84.3
 
   '@glimmer/validator@0.92.3':
     dependencies:
@@ -7395,7 +7388,7 @@ snapshots:
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 22.13.2
+      '@types/node': 22.13.4
 
   '@types/chai-as-promised@7.1.8':
     dependencies:
@@ -7405,11 +7398,11 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.13.2
+      '@types/node': 22.13.4
 
   '@types/cors@2.8.17':
     dependencies:
-      '@types/node': 22.13.2
+      '@types/node': 22.13.4
 
   '@types/eslint@8.56.12':
     dependencies:
@@ -7420,7 +7413,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.6':
     dependencies:
-      '@types/node': 22.13.2
+      '@types/node': 22.13.4
       '@types/qs': 6.9.18
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -7434,18 +7427,18 @@ snapshots:
 
   '@types/fs-extra@5.1.0':
     dependencies:
-      '@types/node': 22.13.2
+      '@types/node': 22.13.4
 
   '@types/fs-extra@8.1.5':
     dependencies:
-      '@types/node': 22.13.2
+      '@types/node': 22.13.4
 
   '@types/gensync@1.0.4': {}
 
   '@types/glob@8.1.0':
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 22.13.2
+      '@types/node': 22.13.4
 
   '@types/http-errors@2.0.4': {}
 
@@ -7457,7 +7450,7 @@ snapshots:
 
   '@types/minimatch@5.1.2': {}
 
-  '@types/node@22.13.2':
+  '@types/node@22.13.4':
     dependencies:
       undici-types: 6.20.0
 
@@ -7468,17 +7461,17 @@ snapshots:
   '@types/rimraf@2.0.5':
     dependencies:
       '@types/glob': 8.1.0
-      '@types/node': 22.13.2
+      '@types/node': 22.13.4
 
   '@types/send@0.17.4':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 22.13.2
+      '@types/node': 22.13.4
 
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 22.13.2
+      '@types/node': 22.13.4
       '@types/send': 0.17.4
 
   '@types/symlink-or-copy@1.2.2': {}
@@ -8311,7 +8304,7 @@ snapshots:
   browserslist@4.24.4:
     dependencies:
       caniuse-lite: 1.0.30001699
-      electron-to-chromium: 1.5.98
+      electron-to-chromium: 1.5.99
       node-releases: 2.0.19
       update-browserslist-db: 1.1.2(browserslist@4.24.4)
 
@@ -8761,7 +8754,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  electron-to-chromium@1.5.98: {}
+  electron-to-chromium@1.5.99: {}
 
   ember-async-data@1.0.3(ember-source@6.4.0-alpha.2(@glimmer/component@2.0.0)(@glint/template@1.4.1-unstable.34c4510)(rsvp@4.8.5)):
     dependencies:
@@ -9391,7 +9384,7 @@ snapshots:
     dependencies:
       '@glimmer/reference': 0.84.3
       '@glimmer/syntax': 0.84.3
-      '@glimmer/validator': 0.84.3
+      '@glimmer/validator': 0.92.3
       async-promise-queue: 1.0.5
       colors: 1.4.0
       commander: 8.3.0
@@ -9427,7 +9420,7 @@ snapshots:
   engine.io@6.6.4:
     dependencies:
       '@types/cors': 2.8.17
-      '@types/node': 22.13.2
+      '@types/node': 22.13.4
       accepts: 1.3.8
       base64id: 2.0.0
       cookie: 0.7.2
@@ -12517,6 +12510,15 @@ snapshots:
       - '@babel/core'
       - supports-color
 
+  tracked-built-ins@4.0.0(@babel/core@7.26.8):
+    dependencies:
+      '@embroider/addon-shim': 1.9.0
+      decorator-transforms: 2.3.0(@babel/core@7.26.8)
+      ember-tracked-storage-polyfill: 1.0.0
+    transitivePeerDependencies:
+      - '@babel/core'
+      - supports-color
+
   tracked-toolbox@2.0.0(@babel/core@7.26.8)(ember-source@6.4.0-alpha.2(@glimmer/component@2.0.0)(@glint/template@1.4.1-unstable.34c4510)(rsvp@4.8.5)):
     dependencies:
       '@embroider/addon-shim': 1.9.0
@@ -12720,13 +12722,13 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite@6.1.0(@types/node@22.13.2)(terser@5.39.0):
+  vite@6.1.0(@types/node@22.13.4)(terser@5.39.0):
     dependencies:
       esbuild: 0.24.2
       postcss: 8.5.2
       rollup: 4.34.6
     optionalDependencies:
-      '@types/node': 22.13.2
+      '@types/node': 22.13.4
       fsevents: 2.3.3
       terser: 5.39.0
 

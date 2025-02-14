@@ -85,10 +85,19 @@ table {
 .dynamic-filter {
   display: inline-grid;
   gap: 0.5rem;
+
 }
 
 .filters h2 {
   font-size: 1.25rem;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.filters {
+  label span {
+    font-size: 0.85rem;
+  }
 }
 
 
