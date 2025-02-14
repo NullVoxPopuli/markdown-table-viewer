@@ -20,4 +20,7 @@ export default defineConfig({
       extensions,
     }),
   ],
+  define: {
+    'import.meta.vitest': 'undefined',
+  },
 });

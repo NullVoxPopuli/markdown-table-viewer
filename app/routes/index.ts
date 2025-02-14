@@ -1,6 +1,6 @@
-import { assert } from '@ember/debug';
 import Route from '@ember/routing/route';
 import type RouterService from '@ember/routing/router-service';
+import type Transition from '@ember/routing/transition';
 import { service } from '@ember/service';
 
 export interface Model {
@@ -16,11 +16,12 @@ export default class IndexRoute extends Route {
     key: { refreshModel: true },
   };
 
-  async beforeModel(transition) {
+  beforeModel(transition: Transition) {
     const { to } = transition;
     const { queryParams } = to ?? {};
 
-    const file = queryParams.file;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+    const file = (queryParams as any)?.file;
 
     if (!file) {
       transition.abort();
@@ -36,7 +37,7 @@ export default class IndexRoute extends Route {
 
     const data = findTable(text, key);
 
-    return data;
+    return { data, file };
   }
 }
 

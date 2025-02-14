@@ -39,7 +39,9 @@
       ]
     },
     "types": [
-      "ember-source/types"
+      "ember-source/types",
+      "vite/client",
+      "vitest/importMeta"
     ]
   },
 }
