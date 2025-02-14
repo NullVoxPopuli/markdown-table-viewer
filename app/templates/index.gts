@@ -1,5 +1,5 @@
 import { DynamicTable } from '#components/dynamic-table.gts';
-import type { Model } from '#routes/application.ts';
+import type { Model } from '#routes/index.ts';
 import type { TOC } from '@ember/component/template-only';
 
 export default <template>

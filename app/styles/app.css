@@ -170,4 +170,45 @@ table {
   }
 }
 
+form.load-form {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
 
+  .buttons {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .url {
+    input  {
+    font-size: 1.25rem;
+      padding: 0.5rem 1rem;
+    }
+  }
+  .key {
+    input {
+      padding: 0.5rem 1rem;
+    }
+  }
+
+  label {
+    display: flex;
+    gap: 0.5rem;
+    flex-direction: column;
+    align-items: center;
+    input {
+      width: 100%;
+    }
+  }
+
+  button, input[type='reset'] {
+    padding: 0.125rem 0.125rem;
+    background: none;
+    border: none;
+    color: var(--current-fg);
+  }
+
+}

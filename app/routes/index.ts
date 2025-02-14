@@ -1,28 +1,40 @@
 import { assert } from '@ember/debug';
 import Route from '@ember/routing/route';
+import type RouterService from '@ember/routing/router-service';
+import { service } from '@ember/service';
 
 export interface Model {
   headers: string[];
   rows: string[][];
 }
 
-export default class ApplicationRoute extends Route {
+export default class IndexRoute extends Route {
+  @service declare router: RouterService;
+
   queryParams = {
     file: { refreshModel: true },
     key: { refreshModel: true },
   };
 
-  async model({ file, key }: { file: string; key: string }): Promise<Model> {
-    assert(`file is a required query param`, file);
+  async beforeModel(transition) {
+    const { to } = transition;
+    const { queryParams } = to ?? {};
 
+    const file = queryParams.file;
+
+    if (!file) {
+      transition.abort();
+      this.router.transitionTo('load');
+    }
+  }
+
+  async model({ file, key }: { file: string; key: string }): Promise<Model> {
     console.log('Parsed QPs', { file, key });
 
     const response = await fetch(file);
     const text = await response.text();
 
     const data = findTable(text, key);
-
-    console.log('Parsed table', data);
 
     return data;
   }
