@@ -27,6 +27,10 @@
       can do the proper transformations on those files.
     */
     "allowImportingTsExtensions": true,
+
+    // stylistic
+    "noPropertyAccessFromIndexSignature": false,
+
     "paths": {
       "table-viewer/tests/*": [
         "./tests/*"

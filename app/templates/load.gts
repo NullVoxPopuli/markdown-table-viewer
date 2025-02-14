@@ -3,29 +3,47 @@ import type RouterService from '@ember/routing/router-service';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { dataFromEvent } from 'ember-primitives/components/form';
+import { urlToRaw } from '#utils';
+import { tracked } from '@glimmer/tracking';
 
 class Form extends Component {
   @service declare router: RouterService;
 
+  @tracked error: undefined | string;
+
   handleSubmit = (submitEvent: SubmitEvent) => {
     submitEvent.preventDefault();
+    this.error = undefined;
 
-    const data = dataFromEvent(submitEvent);
+    try {
+      const data = dataFromEvent(submitEvent);
 
-    console.log(data);
+      const raw = urlToRaw(String(data.url));
+
+      const url = `/?file=${raw}&key=${data.key}`;
+      this.router.transitionTo(url);
+    } catch (e) {
+      this.error = e.message;
+    }
   };
 
   <template>
     <form {{on "submit" this.handleSubmit}} class="load-form">
+      {{#if this.error}}
+        <div class="error">
+          {{this.error}}
+        </div>
+      {{/if}}
+
       <label class="url">
         <span>URL to markdown document containing a table</span>
-        <input required type="text" name="url" />
+        <input required type="text" name="url" autocomplete="off" />
       </label>
 
       <label class="key">
         <span>Optional first few characters of the table heading<br />
           <span class="small">(if there are multiple tables in the document)</span></span>
-        <input type="text" name="key" />
+        <input type="text" name="key" autocomplete="off" />
       </label>
 
       <span class="buttons">

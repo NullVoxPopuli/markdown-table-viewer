@@ -4,8 +4,11 @@ import type Transition from '@ember/routing/transition';
 import { service } from '@ember/service';
 
 export interface Model {
-  headers: string[];
-  rows: string[][];
+  data: {
+    headers: string[];
+    rows: string[][];
+  };
+  file: string;
 }
 
 export default class IndexRoute extends Route {
