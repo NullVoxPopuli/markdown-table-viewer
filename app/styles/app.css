@@ -28,6 +28,11 @@ header {
         color: #5a5aff;
       }
     }
+
+    select {
+      background: var(--dark-bg);
+      color: var(--dark-fg);
+    }
   }
 
   header {

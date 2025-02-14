@@ -61,8 +61,6 @@ class DynamicTable extends Component<{ headers: string[]; rows: string[][] }> {
   }
 
   <template>
-    {{log "reactive this.filters" this.filters}}
-
     <section class="filters">
       <h2>Filters</h2>
       <Form @onChange={{this.handleChange}}>
@@ -91,6 +89,10 @@ class DynamicTable extends Component<{ headers: string[]; rows: string[][] }> {
             {{#each row as |datum|}}
               <td>{{datum}}</td>
             {{/each}}
+          </tr>
+        {{else}}
+          <tr>
+            <td colspan={{@headers.length}}>No results</td>
           </tr>
         {{/each}}
       </tbody>
