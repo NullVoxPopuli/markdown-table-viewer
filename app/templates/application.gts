@@ -34,17 +34,26 @@ class Filters extends Component<{
   </template>
 }
 
-class DynamicTable extends Component<{ headers: string[]; rows: string[][] }> {
-  @tracked filters: {
-    [column: string]: string[];
-  } = {};
+interface FormFilters {
+  [column: string]: string[];
+}
 
-  handleChange = (newValues) => {
+class DynamicTable extends Component<{ headers: string[]; rows: string[][] }> {
+  @tracked declare filters: FormFilters;
+
+  handleChange = (newValues: FormFilters) => {
+    console.log(newValues);
     this.filters = newValues;
   };
 
   get filtered() {
     const { rows, headers } = this.args;
+
+    if (!this.filters) {
+      return rows;
+    }
+
+    console.log('trying to filter');
 
     return rows.filter((row) => {
       return row.every((column, index) => {
