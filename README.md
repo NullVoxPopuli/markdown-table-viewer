@@ -6,7 +6,8 @@ All powered by query params.
 
 
 ```
-https://markdown-table.nullvoxpopuli.com?file=url-to-file&key=where-table-starts
+https://markdown-table.nullvoxpopuli.com
+  ?file=url-to-file&key=where-table-starts
 ```
 
 ## Examples
