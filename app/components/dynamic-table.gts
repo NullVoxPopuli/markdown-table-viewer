@@ -95,7 +95,11 @@ export class DynamicTable extends Component<{
       <Form @onChange={{this.handleChange}}>
         <div>
           {{#each @headers as |header|}}
-            <Filters @column={{header}} @headers={{@headers}} @rows={{@rows}} />
+            <Filters
+              @column={{header}}
+              @headers={{@headers}}
+              @rows={{this.filtered}}
+            />
           {{/each}}
         </div>
         <input
