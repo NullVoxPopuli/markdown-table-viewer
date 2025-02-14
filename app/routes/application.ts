@@ -1,14 +1,21 @@
 import { assert } from '@ember/debug';
 import Route from '@ember/routing/route';
 
+export interface Model {
+  headers: string[];
+  rows: string[][];
+}
+
 export default class ApplicationRoute extends Route {
   queryParams = {
     file: { refreshModel: true },
     key: { refreshModel: true },
   };
 
-  async model({ file, key }: { file: string; key: string }) {
+  async model({ file, key }: { file: string; key: string }): Promise<Model> {
     assert(`file is a required query param`, file);
+
+    console.log('Parsed QPs', { file, key });
 
     const response = await fetch(file);
     const text = await response.text();
@@ -29,7 +36,11 @@ export default class ApplicationRoute extends Route {
 function findTable(text: string, key: string | undefined) {
   const lines = text.split('\n');
 
-  const start = lines.findIndex((line) => line.startsWith(key));
+  let start = lines.findIndex((line) => line.startsWith(key));
+
+  if (start <= 0) {
+    start = lines.findIndex((line) => line.startsWith('|'));
+  }
 
   const remaining = lines.slice(start);
 

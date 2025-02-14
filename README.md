@@ -13,5 +13,5 @@ https://markdown-table.nullvoxpopuli.com?file=url-to-file&key=where-table-starts
 
 
 From [disk perf](https://github.com/NullVoxPopuli/disk-perf-git-and-pnpm), 
-  - [this table compares disk performance](https://markdown-table.nullvoxpopuli.com?file=https://raw.githubusercontent.com/NullVoxPopuli/disk-perf-git-and-pnpm/refs/heads/main/README.md&key=| CPU |)
+  - [this table compares disk performance](https://markdown-table.nullvoxpopuli.com?file=https://raw.githubusercontent.com/NullVoxPopuli/disk-perf-git-and-pnpm/refs/heads/main/README.md)
 

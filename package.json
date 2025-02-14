@@ -1,5 +1,6 @@
 {
   "name": "table-viewer",
+  "type": "module",
   "version": "0.0.0",
   "private": true,
   "description": "Small description for table-viewer goes here",
@@ -67,7 +68,8 @@
     "version": 2
   },
   "imports": {
-    "#components/*": "./app/components/*"
+    "#components/*": "./app/components/*",
+    "#routes/*": "./app/routes/*"
   },
   "exports": {
     "./tests/*": "./tests/*",
@@ -75,7 +77,12 @@
   },
   "pnpm": {
     "peerDependencyRules": {
-      "ignoreMissing": ["webpack"]
+      "ignoreMissing": [
+        "webpack"
+      ]
     }
+  },
+  "dependencies": {
+    "ember-primitives": "^0.27.2"
   }
 }
