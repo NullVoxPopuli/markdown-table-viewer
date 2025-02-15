@@ -37,7 +37,7 @@ export class DynamicTable extends Component<{
     if (!value) return;
     const heading = this.args.headers[hIndex];
     if (!heading) return;
-    let num = parseFloat(value);
+    const num = parseFloat(value);
 
     if (isNaN(num)) return;
 
