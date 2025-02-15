@@ -1,5 +1,5 @@
-'use strict';
+const config = {
+  extends: 'recommended'
+}
+export default config;
 
-module.exports = {
-  extends: 'recommended',
-};
