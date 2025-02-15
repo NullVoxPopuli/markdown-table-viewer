@@ -1,77 +1,96 @@
-import { Form } from 'ember-primitives/components/form';
-import { on } from '@ember/modifier';
 import Component from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
-import { Filters } from './filters.gts';
+import { Filter, FilterForm } from './filters.gts';
 import { Sorter, Sorts } from './sorter.gts';
+import { link } from 'reactiveweb/link';
+import { parseInline } from 'marked';
+import { interpolate } from 'culori';
+import { service } from '@ember/service';
+import type QPService from '#services/qp.ts';
 
-interface FormFilters {
-  [column: string]: string[];
+function convertMarkdown(str: string): string {
+  return parseInline(str, { gfm: true }) as string;
 }
 
 export class DynamicTable extends Component<{
   headers: string[];
   rows: string[][];
 }> {
-  @tracked filters: undefined | FormFilters;
+  @service declare qp: QPService;
 
   // Bug? this should be safe
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-  sorter = new Sorter({
-    data: () => this.filtered,
+  @link filter = new Filter({
+    data: () => this.args.rows,
     headers: () => this.args.headers,
   });
 
-  handleChange = (newValues: unknown) => {
-    this.filters = newValues as FormFilters;
+  // Bug? this should be safe
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+  @link sorter = new Sorter({
+    // Bug? this should be safe
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
+    data: () => this.filter.data,
+    headers: () => this.args.headers,
+  });
+
+  colorFor = (hIndex: number, value: string) => {
+    if (!value) return;
+    const heading = this.args.headers[hIndex];
+    if (!heading) return;
+    const num = parseFloat(value);
+
+    if (isNaN(num)) return;
+
+    const validation = this.qp.conditionalValidations?.find(
+      (v) => v[0] === heading
+    );
+    if (!validation) return;
+
+    const interpolation = this.getInterpolation(
+      hIndex,
+      validation[1],
+      validation[2]
+    );
+
+    const max = this.maxOf(hIndex);
+    const min = this.minOf(hIndex);
+    const normalized = (num - min) / (max - min);
+    const color = interpolation(normalized);
+
+    return `oklch(${color.l} ${color.c} ${color.h}deg)`;
   };
-  clear = () => (this.filters = {});
 
-  get filtered() {
-    const { rows, headers } = this.args;
-    const filters = this.filters;
+  #maxCache = {};
+  #minCache = {};
+  maxOf = (hIndex: number) => {
+    if (this.#maxCache[hIndex]) return this.#maxCache[hIndex];
 
-    if (!filters) {
-      return rows;
-    }
+    const values = this.args.rows
+      .map((row) => row[hIndex])
+      .map((x) => parseFloat(x));
+    return Math.max(...values);
+  };
+  minOf = (hIndex: number) => {
+    if (this.#minCache[hIndex]) return this.#minCache[hIndex];
+    const values = this.args.rows
+      .map((row) => row[hIndex])
+      .map((x) => parseFloat(x));
+    return Math.min(...values);
+  };
 
-    return rows.filter((row) => {
-      return Object.entries(filters).every(([filterName, filters]) => {
-        if (filters.length === 0) return true;
+  #interpolationCache = {};
+  getInterpolation(hIndex: number, end: string, start: string) {
+    if (this.#interpolationCache[hIndex])
+      return this.#interpolationCache[hIndex];
 
-        if (filterName.endsWith('-search')) {
-          const headerName = filterName.replace(/-search$/, '');
-          const hIndex = headers.indexOf(headerName);
-          return row[hIndex]?.includes(filters);
-        }
+    const interpolation = interpolate([end, start], 'oklch');
 
-        const hIndex = headers.indexOf(filterName);
-        return filters.some((filter) => row[hIndex]?.includes(filter));
-      });
-    });
+    this.#interpolationCache[hIndex] = interpolation;
+    return interpolation;
   }
 
   <template>
-    <section class="filters">
-      <h2>Filters</h2>
-      <Form @onChange={{this.handleChange}}>
-        <div>
-          {{#each @headers as |header|}}
-            <Filters
-              @column={{header}}
-              @headers={{@headers}}
-              @rows={{this.filtered}}
-            />
-          {{/each}}
-        </div>
-        <input
-          aria-label="Clear the form"
-          type="reset"
-          value="Clear"
-          {{on "click" this.clear}}
-        />
-      </Form>
-    </section>
+    <FilterForm @filters={{this.filter}} />
 
     <table>
       <thead>
@@ -89,8 +108,12 @@ export class DynamicTable extends Component<{
       <tbody>
         {{#each this.sorter.data as |row|}}
           <tr>
-            {{#each row as |datum|}}
-              <td>{{datum}}</td>
+            {{#each row as |datum index|}}
+              {{! NOTE: not sanitized, because no user data is captured on this site.
+                        Also, github sanitizes on save }}
+              <td
+                style="background: {{this.colorFor index datum}}"
+              >{{{convertMarkdown datum}}}</td>
             {{/each}}
           </tr>
         {{else}}
