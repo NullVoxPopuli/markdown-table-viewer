@@ -20,9 +20,11 @@ class Form extends Component {
 
       const raw = urlToRaw(String(data.url));
 
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       const url = `/?file=${raw}&key=${data.key}`;
       this.router.transitionTo(url);
     } catch (e) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       this.error = e.message;
     }
   };

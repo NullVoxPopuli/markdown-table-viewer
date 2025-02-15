@@ -11,6 +11,11 @@ export interface Model {
   file: string;
 }
 
+interface Params {
+  file: string;
+  key: string;
+}
+
 export default class IndexRoute extends Route {
   @service declare router: RouterService;
 
@@ -33,24 +38,43 @@ export default class IndexRoute extends Route {
   }
 
   async model({ file, key }: { file: string; key: string }): Promise<Model> {
-    console.log('Parsed QPs', { file, key });
+    return await this.withErrorHandling({ file, key });
+  }
 
+  async withErrorHandling(params: Params) {
     try {
-      const response = await fetch(file);
-      if (response.status >= 400) {
-        this.router.transitionTo(
-          `/error?error=Could not load file :( \n Status ${response.status}.`
-        );
+      const response = await this.load(params);
+
+      if (!response) throw new Error(`Could not load or parse data`);
+
+      return response;
+    } catch (e) {
+      this.handleError(e);
+      throw e;
+    }
+  }
+
+  handleError(e: unknown) {
+    if (typeof e === 'object' && e !== null) {
+      if ('message' in e && typeof e.message === 'string') {
+        this.router.transitionTo(`/error?error=${e.message}`);
         return;
       }
-      const text = await response.text();
-
-      const data = findTable(text, key);
-
-      return { data, file };
-    } catch (e) {
-      this.router.transitionTo(`/error?error=${e}`);
     }
+
+    this.router.transitionTo(`An unknown error occurred`);
+  }
+
+  async load({ file, key }: Params) {
+    const response = await fetch(file);
+    if (response.status >= 400) {
+      throw new Error(`Could not load file :( \n Status ${response.status}.`);
+    }
+    const text = await response.text();
+
+    const data = findTable(text, key);
+
+    return { data, file };
   }
 }
 
@@ -62,7 +86,7 @@ export default class IndexRoute extends Route {
 function findTable(text: string, key: string | undefined) {
   const lines = text.split('\n');
 
-  let start = lines.findIndex((line) => line.startsWith(key));
+  let start = key ? lines.findIndex((line) => line.startsWith(key)) : 0;
 
   if (start <= 0) {
     start = lines.findIndex((line) => line.startsWith('|'));

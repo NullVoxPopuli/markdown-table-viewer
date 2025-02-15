@@ -15,6 +15,8 @@ export class DynamicTable extends Component<{
 }> {
   @tracked filters: undefined | FormFilters;
 
+  // Bug? this should be safe
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
   sorter = new Sorter({
     data: () => this.filtered,
     headers: () => this.args.headers,
