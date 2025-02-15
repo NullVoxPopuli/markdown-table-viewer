@@ -2,6 +2,11 @@ import Component from '@glimmer/component';
 import { Filter, FilterForm } from './filters.gts';
 import { Sorter, Sorts } from './sorter.gts';
 import { link } from 'reactiveweb/link';
+import { parseInline } from 'marked';
+
+function convertMarkdown(str: string): string {
+  return parseInline(str, { gfm: true }) as string;
+}
 
 export class DynamicTable extends Component<{
   headers: string[];
@@ -43,7 +48,9 @@ export class DynamicTable extends Component<{
         {{#each this.sorter.data as |row|}}
           <tr>
             {{#each row as |datum|}}
-              <td>{{datum}}</td>
+              {{! NOTE: not sanitized, because no user data is captured on this site.
+                        Also, github sanitizes on save }}
+              <td>{{{convertMarkdown datum}}}</td>
             {{/each}}
           </tr>
         {{else}}
