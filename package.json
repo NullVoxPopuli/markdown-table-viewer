@@ -89,6 +89,7 @@
     }
   },
   "dependencies": {
-    "ember-primitives": "^0.27.2"
+    "ember-primitives": "^0.27.2",
+    "reactiveweb": "^1.4.0"
   }
 }

@@ -1,77 +1,30 @@
-import { Form } from 'ember-primitives/components/form';
-import { on } from '@ember/modifier';
 import Component from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
-import { Filters } from './filters.gts';
+import { Filter, FilterForm } from './filters.gts';
 import { Sorter, Sorts } from './sorter.gts';
-
-interface FormFilters {
-  [column: string]: string[];
-}
+import { link } from 'reactiveweb/link';
 
 export class DynamicTable extends Component<{
   headers: string[];
   rows: string[][];
 }> {
-  @tracked filters: undefined | FormFilters;
-
   // Bug? this should be safe
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-  sorter = new Sorter({
-    data: () => this.filtered,
+  @link filter = new Filter({
+    data: () => this.args.rows,
     headers: () => this.args.headers,
   });
 
-  handleChange = (newValues: unknown) => {
-    this.filters = newValues as FormFilters;
-  };
-  clear = () => (this.filters = {});
-
-  get filtered() {
-    const { rows, headers } = this.args;
-    const filters = this.filters;
-
-    if (!filters) {
-      return rows;
-    }
-
-    return rows.filter((row) => {
-      return Object.entries(filters).every(([filterName, filters]) => {
-        if (filters.length === 0) return true;
-
-        if (filterName.endsWith('-search')) {
-          const headerName = filterName.replace(/-search$/, '');
-          const hIndex = headers.indexOf(headerName);
-          return row[hIndex]?.includes(filters);
-        }
-
-        const hIndex = headers.indexOf(filterName);
-        return filters.some((filter) => row[hIndex]?.includes(filter));
-      });
-    });
-  }
+  // Bug? this should be safe
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+  @link sorter = new Sorter({
+    // Bug? this should be safe
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
+    data: () => this.filter.data,
+    headers: () => this.args.headers,
+  });
 
   <template>
-    <section class="filters">
-      <h2>Filters</h2>
-      <Form @onChange={{this.handleChange}}>
-        <div>
-          {{#each @headers as |header|}}
-            <Filters
-              @column={{header}}
-              @headers={{@headers}}
-              @rows={{this.filtered}}
-            />
-          {{/each}}
-        </div>
-        <input
-          aria-label="Clear the form"
-          type="reset"
-          value="Clear"
-          {{on "click" this.clear}}
-        />
-      </Form>
-    </section>
+    <FilterForm @filters={{this.filter}} />
 
     <table>
       <thead>
