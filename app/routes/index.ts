@@ -22,6 +22,11 @@ export default class IndexRoute extends Route {
   queryParams = {
     file: { refreshModel: true },
     key: { refreshModel: true },
+    // post-fetch customizations
+    cv: { /* custom validations */ refreshModel: false },
+    // Not implemented yet, but should be
+    sort: { refreshModel: false },
+    filter: { refreshModel: false },
   };
 
   beforeModel(transition: Transition) {
