@@ -3,14 +3,10 @@
   "type": "module",
   "version": "0.0.0",
   "private": true,
-  "description": "Small description for table-viewer goes here",
-  "repository": "",
+  "description": "Load and parse a table from a markdown document and make it interactive",
+  "repository": "https://github.com/NullVoxPopuli/rere-benchmark",
   "license": "MIT",
-  "author": "",
-  "directories": {
-    "doc": "doc",
-    "test": "tests"
-  },
+  "author": "NullVoxPopuli",
   "scripts": {
     "build": "vite build",
     "lint": "concurrently \"pnpm:lint:*(!fix)\" --names \"lint:\" --prefixColors auto",
@@ -25,6 +21,26 @@
     "test:vitest": "vitest run",
     "test:qunit": ""
   },
+  "imports": {
+    "#utils": "./app/utils.ts",
+    "#components/*": "./app/components/*",
+    "#services/*": "./app/services/*",
+    "#routes/*": "./app/routes/*"
+  },
+  "dependencies": {
+    "@glimmer/component": "^2.0.0",
+    "@glimmer/tracking": "^1.1.2",
+    "culori": "^4.0.1",
+    "ember-modifier": "^4.2.0",
+    "ember-page-title": "^8.2.3",
+    "ember-primitives": "^0.27.2",
+    "ember-resolver": "^13.1.0",
+    "ember-source": "~6.4.0-alpha.2",
+    "lz-string": "^1.5.0",
+    "marked": "^15.0.7",
+    "reactiveweb": "^1.4.0",
+    "tracked-built-ins": "^4.0.0"
+  },
   "devDependencies": {
     "@babel/core": "^7.26.8",
     "@babel/plugin-transform-runtime": "^7.26.8",
@@ -34,8 +50,6 @@
     "@embroider/compat": "^4.0.0-alpha.0",
     "@embroider/core": "^4.0.0-alpha.0",
     "@embroider/vite": "^1.0.0-alpha.0",
-    "@glimmer/component": "^2.0.0",
-    "@glimmer/tracking": "^1.1.2",
     "@glint/core": "1.4.1-unstable.34c4510",
     "@glint/environment-ember-loose": "1.4.1-unstable.34c4510",
     "@glint/environment-ember-template-imports": "1.4.1-unstable.34c4510",
@@ -47,15 +61,10 @@
     "concurrently": "^9.1.2",
     "decorator-transforms": "^2.3.0",
     "ember-eslint": "^0.1.0",
-    "ember-modifier": "^4.2.0",
-    "ember-page-title": "^8.2.3",
-    "ember-resolver": "^13.1.0",
-    "ember-source": "~6.4.0-alpha.2",
     "ember-template-lint": "^6.1.0",
     "eslint": "^9.20.1",
     "prettier": "^3.5.1",
     "prettier-plugin-ember-template-tag": "^2.0.4",
-    "tracked-built-ins": "^4.0.0",
     "typescript": "^5.7.3",
     "vite": "^6.1.0",
     "vitest": "^3.0.5"
@@ -70,12 +79,6 @@
     "type": "app",
     "version": 2
   },
-  "imports": {
-    "#utils": "./app/utils.ts",
-    "#components/*": "./app/components/*",
-    "#services/*": "./app/services/*",
-    "#routes/*": "./app/routes/*"
-  },
   "exports": {
     "./tests/*": "./tests/*",
     "./*": "./app/*"
@@ -89,11 +92,5 @@
         "webpack"
       ]
     }
-  },
-  "dependencies": {
-    "culori": "^4.0.1",
-    "ember-primitives": "^0.27.2",
-    "marked": "^15.0.7",
-    "reactiveweb": "^1.4.0"
   }
 }

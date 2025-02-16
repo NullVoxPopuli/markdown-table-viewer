@@ -1,10 +1,16 @@
-import { cached, tracked } from '@glimmer/tracking';
+import { cached } from '@glimmer/tracking';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
+import { service } from '@ember/service';
 import type { TOC } from '@ember/component/template-only';
+import type QPService from '#services/qp.ts';
 
 export class Sorter {
-  @tracked sort: null | [string, 'asc' | 'desc'] = null;
+  @service declare qps: QPService;
+
+  get sort() {
+    return this.qps.sort;
+  }
 
   #dataFn: () => string[][];
   #headerFn: () => string[];
@@ -24,13 +30,13 @@ export class Sorter {
   }
 
   sortAsc = (columnName: string) => {
-    if (this.sort?.[0] === columnName) this.sort = null;
+    if (this.sort?.[0] === columnName) this.qps.sort = null;
 
-    this.sort = [columnName, 'asc'];
+    this.qps.sort = [columnName, 'asc'];
   };
   sortDesc = (columnName: string) => {
-    if (this.sort?.[0] === columnName) this.sort = null;
-    this.sort = [columnName, 'desc'];
+    if (this.sort?.[0] === columnName) this.qps.sort = null;
+    this.qps.sort = [columnName, 'desc'];
   };
 
   isAscBy = (columnName: string) => {

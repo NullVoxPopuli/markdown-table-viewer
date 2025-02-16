@@ -41,9 +41,7 @@ export class DynamicTable extends Component<{
 
     if (isNaN(num)) return;
 
-    const validation = this.qp.conditionalValidations?.find(
-      (v) => v[0] === heading
-    );
+    const validation = this.qp.cv?.find((v) => v[0] === heading);
     if (!validation) return;
 
     const interpolation = this.getInterpolation(

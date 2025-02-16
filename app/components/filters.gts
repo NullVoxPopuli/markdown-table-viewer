@@ -2,18 +2,25 @@ import Component from '@glimmer/component';
 import { Form } from 'ember-primitives/components/form';
 import { on } from '@ember/modifier';
 import { guidFor } from '@ember/object/internals';
-import { cached, tracked } from '@glimmer/tracking';
+import { cached } from '@glimmer/tracking';
 import type { TOC } from '@ember/component/template-only';
+import type QPService from '#services/qp.ts';
+import { service } from '@ember/service';
 
 interface FormFilters {
   [column: string]: string | string[];
 }
 
 export class Filter {
-  @tracked filters: undefined | FormFilters;
-  clear = () => (this.filters = {});
+  @service declare qps: QPService;
+
+  get filters() {
+    return this.qps.filter;
+  }
+
+  clear = () => (this.qps.filter = {});
   handleChange = (newValues: unknown) => {
-    this.filters = newValues as FormFilters;
+    this.qps.filter = newValues as FormFilters;
   };
 
   #dataFn: () => string[][];
