@@ -1,4 +1,5 @@
 import { DynamicTable } from '#components/dynamic-table.gts';
+// import Table from '#components/table.gts';
 import type { Model } from '#routes/index.ts';
 import type { TOC } from '@ember/component/template-only';
 
@@ -15,3 +16,8 @@ export default <template>
 </template> satisfies TOC<{
   model: Model;
 }>;
+
+//
+// -----------------
+//
+// <Table @headers={{@model.data.headers}} @rows={{@model.data.rows}} />

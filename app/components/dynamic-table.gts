@@ -3,9 +3,10 @@ import { Filter, FilterForm } from './filters.gts';
 import { Sorter, Sorts } from './sorter.gts';
 import { link } from 'reactiveweb/link';
 import { parseInline } from 'marked';
-import { interpolate } from 'culori';
 import { service } from '@ember/service';
 import type QPService from '#services/qp.ts';
+import { cached } from '@glimmer/tracking';
+import { colors } from '#colors';
 
 function convertMarkdown(str: string): string {
   return parseInline(str, { gfm: true }) as string;
@@ -33,58 +34,12 @@ export class DynamicTable extends Component<{
     headers: () => this.args.headers,
   });
 
-  colorFor = (hIndex: number, value: string) => {
-    if (!value) return;
-    const heading = this.args.headers[hIndex];
-    if (!heading) return;
-    const num = parseFloat(value);
-
-    if (isNaN(num)) return;
-
-    const validation = this.qp.cv?.find((v) => v[0] === heading);
-    if (!validation) return;
-
-    const interpolation = this.getInterpolation(
-      hIndex,
-      validation[1],
-      validation[2]
-    );
-
-    const max = this.maxOf(hIndex);
-    const min = this.minOf(hIndex);
-    const normalized = (num - min) / (max - min);
-    const color = interpolation(normalized);
-
-    return `oklch(${color.l} ${color.c} ${color.h}deg)`;
-  };
-
-  #maxCache = {};
-  #minCache = {};
-  maxOf = (hIndex: number) => {
-    if (this.#maxCache[hIndex]) return this.#maxCache[hIndex];
-
-    const values = this.args.rows
-      .map((row) => row[hIndex])
-      .map((x) => parseFloat(x));
-    return Math.max(...values);
-  };
-  minOf = (hIndex: number) => {
-    if (this.#minCache[hIndex]) return this.#minCache[hIndex];
-    const values = this.args.rows
-      .map((row) => row[hIndex])
-      .map((x) => parseFloat(x));
-    return Math.min(...values);
-  };
-
-  #interpolationCache = {};
-  getInterpolation(hIndex: number, end: string, start: string) {
-    if (this.#interpolationCache[hIndex])
-      return this.#interpolationCache[hIndex];
-
-    const interpolation = interpolate([end, start], 'oklch');
-
-    this.#interpolationCache[hIndex] = interpolation;
-    return interpolation;
+  @cached
+  get colors() {
+    return colors(this.qp, {
+      headers: this.args.headers,
+      rows: this.args.rows,
+    });
   }
 
   <template>
@@ -110,7 +65,7 @@ export class DynamicTable extends Component<{
               {{! NOTE: not sanitized, because no user data is captured on this site.
                         Also, github sanitizes on save }}
               <td
-                style="background: {{this.colorFor index datum}}"
+                style="background: {{this.colors.for index datum}}"
               >{{{convertMarkdown datum}}}</td>
             {{/each}}
           </tr>

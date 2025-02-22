@@ -22,6 +22,7 @@
     "test:qunit": ""
   },
   "imports": {
+    "#colors": "./app/colors.ts",
     "#utils": "./app/utils.ts",
     "#components/*": "./app/components/*",
     "#services/*": "./app/services/*",
