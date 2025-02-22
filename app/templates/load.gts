@@ -5,6 +5,7 @@ import { on } from '@ember/modifier';
 import { dataFromEvent } from 'ember-primitives/components/form';
 import { urlToRaw } from '#utils';
 import { tracked } from '@glimmer/tracking';
+import { LinkTo } from '@ember/routing';
 
 class Form extends Component {
   @service declare router: RouterService;
@@ -55,11 +56,27 @@ class Form extends Component {
     </form>
   </template>
 }
+// https://markdown-table.nullvoxpopuli.com/?file=https%3A%2F%2Fraw.githubusercontent.com%2FNullVoxPopuli%2Fdisk-perf-git-and-pnpm%2Frefs%2Fheads%2Fmain%2FREADME.md&key=&cv=%5B%5B%22%20Clean%20(s)%20%22%2C%22%2300aa00%22%2C%22%23aa0000%22%5D,%5B%22%20Install%20(s)%20%22%2C%22%2300aa00%22%2C%22%23aa0000%22%5D%5D
+const sample = {
+  file: 'https://raw.githubusercontent.com/NullVoxPopuli/disk-perf-git-and-pnpm/refs/heads/main/README.md',
+  key: '| CPU |',
+  cv: '[[" Clean (s) ", "#00aa00", "#aa0000"]]',
+};
+
+const Sample = <template>
+  <span>
+    Or:
+
+    <LinkTo @route="index" @query={{sample}}>view a sample table instead</LinkTo>.
+  </span>
+</template>;
 
 <template>
   <h1>
     Load a table from markdown
   </h1>
+
+  <Sample />
 
   <Form />
 </template>
