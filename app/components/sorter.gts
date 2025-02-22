@@ -6,7 +6,7 @@ import type { TOC } from '@ember/component/template-only';
 import type QPService from '#services/qp.ts';
 
 export class Sorter {
-  @service declare qps: QPService;
+  @service('qp') declare qps: QPService;
 
   get sort() {
     return this.qps.sort;

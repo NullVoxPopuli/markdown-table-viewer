@@ -1,3 +1,4 @@
+import QPService from '#services/qp.ts';
 import Router from './router.ts';
 import PageTitleService from 'ember-page-title/services/page-title';
 
@@ -33,4 +34,5 @@ const resolverRegistry = {
 export const registry = {
   ...resolverRegistry,
   [`${appName}/services/page-title`]: PageTitleService,
+  [`${appName}/services/qp`]: QPService,
 };

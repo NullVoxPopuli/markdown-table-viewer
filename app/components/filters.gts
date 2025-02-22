@@ -12,7 +12,7 @@ interface FormFilters {
 }
 
 export class Filter {
-  @service declare qps: QPService;
+  @service('qp') declare qps: QPService;
 
   get filters() {
     return this.qps.filter;

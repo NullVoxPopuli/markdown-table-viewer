@@ -170,13 +170,69 @@ table {
   }
 }
 
+fieldset.load-fields {
+  margin-top: 2rem;
+  padding: 1rem;
+
+  + details {
+    margin-top: 2rem;
+  }
+
+  .error {
+    border: 1px solid red;
+    color: red;
+    padding: 1rem;
+  }
+}
 form.load-form {
-  margin-top: 1rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2rem;
+  align-items: start;
+  gap: 1rem;
 
+  .color-result {
+    background-color: var(--bg);
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .list-maker {
+    .heading {
+      button {
+        border: 1px solid currentColor;
+        padding: 0.5rem; 1rem;
+      }
+    }
+
+    ul {
+      li {
+        border-bottom: 0.5px solid lightgray;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+
+      }
+      label {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        text-align: right;
+      }
+      input {
+        width: 110px;
+
+      }
+
+      .form-cv {
+        display: flex;
+        gap: 0.5rem;
+        flex-direction: row;
+      }
+      button {
+        border: 1px solid currentColor;
+        padding: 0.5rem; 1rem;
+        align-self: end;
+      }
+    }
+  }
   .buttons {
     display: flex;
     gap: 1rem;
