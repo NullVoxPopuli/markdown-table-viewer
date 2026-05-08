@@ -1,6 +1,6 @@
 import Component from '@glimmer/component';
 import { cached, tracked } from '@glimmer/tracking';
-import { fn } from '@ember/helper';
+import { fn, get } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { service } from '@ember/service';
 import { Filter, Filters } from './filters.gts';
@@ -63,10 +63,9 @@ export class DynamicTable extends Component<{
     data: () => this.args.rows,
     map: (row: string[]): Row => {
       const obj = { [HASH_KEY]: rowHash(row) } as Row;
-      const headers = this.args.headers;
-      for (let i = 0; i < headers.length; i++) {
-        obj[headers[i] as string] = row[i] ?? '';
-      }
+      this.args.headers.forEach((name, i) => {
+        obj[name] = row[i] ?? '';
+      });
       return obj;
     },
   });
@@ -271,9 +270,4 @@ export class DynamicTable extends Component<{
       </div>
     </Form>
   </template>
-}
-
-// Local helpers for safe key-based access used in the template.
-function get<T extends object, K extends keyof T>(obj: T, key: K): T[K] {
-  return obj[key];
 }

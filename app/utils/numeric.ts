@@ -1,12 +1,5 @@
-/**
- * Numeric helpers used by the Highlighting plugin. Same column may be
- * sorted numerically and color-highlighted at the same time; this is
- * just the underlying range computation.
- */
-
 type Row = Record<string, string>;
 
-/** Min/max of a column's parsable numeric values. Returns `undefined` when none. */
 export function numericRange(
   rows: Row[],
   key: string

@@ -70,7 +70,6 @@ class ColumnMeta<T extends Record<string, string> = Record<string, string>> {
     return interpolate([low, high], 'oklch');
   }
 
-  /** CSS `oklch(...)` for `value`, or `undefined` if not applicable. */
   colorFor(value: string): string | undefined {
     if (!value) return undefined;
     const num = parseFloat(value);
@@ -92,7 +91,6 @@ export class Highlighting<
   meta = { column: ColumnMeta };
 }
 
-/** Convenience helper: `colorFor(column, value)` from a template. */
 export function colorFor<T extends Record<string, string>>(
   column: Column<T>,
   value: string
@@ -100,7 +98,6 @@ export function colorFor<T extends Record<string, string>>(
   return meta.forColumn(column, Highlighting).colorFor(value);
 }
 
-/** Whether `column` actually has any numeric data — used to gate UI. */
 export function hasNumericRange<T extends Record<string, string>>(
   column: Column<T>
 ): boolean {

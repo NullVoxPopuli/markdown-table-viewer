@@ -98,10 +98,6 @@ export class Settings<T extends Record<string, string>> extends Component<{
     this.qp.conditionalValidations = [];
   };
 
-  /**
-   * "Has any numeric data" — read off the Highlighting plugin's column
-   * metadata, which already computes (and caches) the per-column range.
-   */
   isNumeric = (column: Column<T>) => hasNumericRange(column);
 
   <template>
