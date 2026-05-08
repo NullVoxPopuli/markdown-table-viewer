@@ -313,8 +313,7 @@ export class DynamicTable extends Component<{
                   </div>
                   <Filters
                     @column={{this.headerForKey column.key}}
-                    @headers={{this.filter.headers}}
-                    @rows={{this.filter.data}}
+                    @filter={{this.filter}}
                   />
                 </th>
               {{/each}}

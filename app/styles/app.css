@@ -466,8 +466,16 @@ tr.is-pinned {
   text-transform: none;
   letter-spacing: 0;
 
-  input[type='text'] {
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
     width: 100%;
+  }
+
+  input[type='text'] {
+    flex: 1;
+    min-width: 0;
     padding: 0.25rem 0.45rem;
     font-size: 0.8rem;
     background: var(--bg);
@@ -478,6 +486,33 @@ tr.is-pinned {
     &:focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 1px;
+    }
+  }
+
+  .filter-clear {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    cursor: pointer;
+    line-height: 1;
+    font-size: 0.85rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      background 0.15s,
+      border-color 0.15s,
+      color 0.15s;
+
+    &:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
     }
   }
 

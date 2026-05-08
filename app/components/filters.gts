@@ -1,5 +1,6 @@
 import Component from '@glimmer/component';
 import { guidFor } from '@ember/object/internals';
+import { on } from '@ember/modifier';
 import { cached, tracked } from '@glimmer/tracking';
 
 interface FormFilters {
@@ -11,6 +12,26 @@ export class Filter {
   clear = () => (this.filters = {});
   handleChange = (newValues: unknown) => {
     this.filters = newValues as FormFilters;
+  };
+
+  hasFilterFor = (column: string): boolean => {
+    const f = this.filters;
+    if (!f) return false;
+    const search = f[`${column}-search`];
+    const multi = f[column];
+    return (
+      (typeof search === 'string' && search.length > 0) ||
+      (Array.isArray(multi) && multi.length > 0)
+    );
+  };
+
+  clearColumn = (column: string) => {
+    const current = this.filters;
+    if (!current) return;
+    const next = { ...current };
+    delete next[column];
+    delete next[`${column}-search`];
+    this.filters = next;
   };
 
   #dataFn: () => string[][];
@@ -81,33 +102,70 @@ export class Filter {
 export class Filters extends Component<{
   Args: {
     column: string;
-    headers: string[];
-    rows: string[][];
+    filter: Filter;
   };
 }> {
   id = guidFor(this);
 
   get options() {
-    const { column, headers, rows } = this.args;
+    const { column } = this.args;
+    const headers = this.args.filter.headers;
+    const rows = this.args.filter.data;
     const index = headers.indexOf(column);
 
-    const data = new Set(rows.map((row) => row[index]?.trim()).filter(Boolean));
-    return data;
+    return new Set(rows.map((row) => row[index]?.trim()).filter(Boolean));
   }
 
   get hasOptions() {
     return this.options.size > 0;
   }
 
+  get isActive() {
+    return this.args.filter.hasFilterFor(this.args.column);
+  }
+
+  /**
+   * Per-column clear: wipe the DOM controls for this filter, then dispatch
+   * a bubbling `input` event so ember-primitives' Form re-reads the form
+   * data and calls our `onChange` with the empty values.
+   */
+  handleClear = (event: MouseEvent) => {
+    event.preventDefault();
+    const button = event.currentTarget as HTMLElement;
+    const wrapper = button.closest('.dynamic-filter');
+    if (!wrapper) return;
+
+    const search = wrapper.querySelector<HTMLInputElement>('input[type="text"]');
+    if (search) search.value = '';
+
+    const select = wrapper.querySelector<HTMLSelectElement>('select');
+    if (select) {
+      for (const opt of Array.from(select.options)) opt.selected = false;
+    }
+
+    wrapper.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
   <template>
     <div class="dynamic-filter">
-      <input
-        type="text"
-        aria-label="Search {{@column}}"
-        placeholder="Search…"
-        name="{{@column}}-search"
-        autocomplete="off"
-      />
+      <span class="filter-row">
+        <input
+          type="text"
+          aria-label="Search {{@column}}"
+          placeholder="Search…"
+          name="{{@column}}-search"
+          autocomplete="off"
+        />
+        {{#if this.isActive}}
+          <button
+            type="button"
+            class="filter-clear"
+            aria-label="Clear filter for {{@column}}"
+            title="Clear {{@column}} filter"
+            {{on "click" this.handleClear}}
+          ><span aria-hidden="true">×</span></button>
+        {{/if}}
+      </span>
       {{#if this.hasOptions}}
         <select
           id={{this.id}}
