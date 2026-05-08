@@ -88,6 +88,13 @@ export class Settings<T> extends Component<{
     this.qp.setColorRange(header, low, inputValue(event));
   };
 
+  swapColors = (header: string | undefined) => {
+    if (!header) return;
+    const cv = this.qp.colorRangeFor(header);
+    if (!cv) return;
+    this.qp.setColorRange(header, cv[2], cv[1]);
+  };
+
   clearHighlights = () => {
     this.qp.conditionalValidations = [];
   };
@@ -163,7 +170,13 @@ export class Settings<T> extends Component<{
                           value={{this.lowColorOf col.name}}
                           {{on "change" (fn this.setLow col.name)}}
                         />
-                        <span class="arrow" aria-hidden="true">→</span>
+                        <button
+                          type="button"
+                          class="color-swap"
+                          aria-label="Swap colors for {{col.name}}"
+                          title="Swap colors"
+                          {{on "click" (fn this.swapColors col.name)}}
+                        ><span aria-hidden="true">⇄</span></button>
                         <input
                           type="color"
                           aria-label="High color for {{col.name}}"
