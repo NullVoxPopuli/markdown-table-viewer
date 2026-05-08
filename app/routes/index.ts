@@ -25,6 +25,7 @@ export default class IndexRoute extends Route {
     // post-fetch customizations
     cv: { /* custom validations */ refreshModel: false },
     hidden: { refreshModel: false },
+    pinned: { refreshModel: false },
     // Not implemented yet, but should be
     sort: { refreshModel: false },
     filter: { refreshModel: false },

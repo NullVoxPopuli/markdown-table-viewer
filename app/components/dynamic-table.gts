@@ -7,7 +7,6 @@ import { Filter, Filters } from './filters.gts';
 import { Form } from 'ember-primitives/components/form';
 import { Settings } from './settings.gts';
 import { link } from 'reactiveweb/link';
-import { parseInline } from 'marked';
 import { interpolate, type Oklch } from 'culori';
 
 import { headlessTable } from '@universal-ember/table';
@@ -20,38 +19,25 @@ import {
   sortAscending,
   sortDescending,
 } from '@universal-ember/table/plugins/data-sorting';
+import { ColumnVisibility } from '@universal-ember/table/plugins/column-visibility';
 import {
-  ColumnVisibility,
-  isHidden,
-} from '@universal-ember/table/plugins/column-visibility';
+  RowSelection,
+  isSelected,
+  toggle as toggleRowSelection,
+} from '@universal-ember/table/plugins/row-selection';
 
 import type { SortItem } from '@universal-ember/table/plugins/data-sorting';
 import type QPService from '#services/qp.ts';
 
-type Row = Record<string, string>;
+import { colKey, indexFromKey } from '#utils/column-keys.ts';
+import { isNumericColumn, numericRange } from '#utils/numeric.ts';
+import { convertMarkdown } from '#utils/markdown.ts';
+import { rowHash } from '#utils/row-hash.ts';
+
+const HASH_KEY = '__hash';
+
+type Row = Record<string, string> & { [HASH_KEY]: string };
 type OklchInterpolator = (t: number) => Oklch;
-
-const COL_KEY_PREFIX = 'col';
-const colKey = (index: number) => `${COL_KEY_PREFIX}${index}`;
-const indexFromKey = (key: string) =>
-  parseInt(key.slice(COL_KEY_PREFIX.length), 10);
-
-function convertMarkdown(str: string): string {
-  return parseInline(str ?? '', { gfm: true }) as string;
-}
-
-function isNumericColumn(rows: string[][], hIndex: number): boolean {
-  let numeric = 0;
-  let total = 0;
-  for (const row of rows) {
-    const v = row[hIndex];
-    if (!v || !v.trim()) continue;
-    total++;
-    if (!isNaN(parseFloat(v))) numeric++;
-    if (total >= 25) break;
-  }
-  return total > 0 && numeric / total >= 0.6;
-}
 
 export class DynamicTable extends Component<{
   Args: {
@@ -83,6 +69,12 @@ export class DynamicTable extends Component<{
         onSort: (sorts) => (this.sorts = sorts as SortItem<Row>[]),
       })),
       ColumnVisibility,
+      RowSelection.with(() => ({
+        selection: this.pinnedSet,
+        key: (data: Row) => data[HASH_KEY],
+        onSelect: (key: string) => this.qp.togglePin(key),
+        onDeselect: (key: string) => this.qp.togglePin(key),
+      })),
     ],
   });
 
@@ -100,16 +92,22 @@ export class DynamicTable extends Component<{
     }));
   }
 
+  /** Visible columns, as filtered by the ColumnVisibility plugin. */
   @cached
   get visibleColumns() {
-    return tableColumns.for(this.table).filter((c) => !isHidden(c));
+    return tableColumns.for(this.table);
   }
 
+  /**
+   * Every input row, hashed and converted to the object shape the headless
+   * table expects. Index into the original array is kept (`__index`) so we
+   * can drive deterministic ordering when needed.
+   */
   @cached
-  get rowsAsObjects(): Row[] {
+  get allRows(): Row[] {
     const headers = this.headers;
-    return this.filter.data.map((row) => {
-      const obj: Row = {};
+    return this.args.rows.map((row) => {
+      const obj = { [HASH_KEY]: rowHash(row) } as Row;
       for (let i = 0; i < headers.length; i++) {
         obj[colKey(i)] = row[i] ?? '';
       }
@@ -118,32 +116,65 @@ export class DynamicTable extends Component<{
   }
 
   @cached
+  get pinnedSet(): Set<string> {
+    return new Set(this.qp.pinnedRows);
+  }
+
+  @cached
+  get pinnedRows(): Row[] {
+    const set = this.pinnedSet;
+    if (set.size === 0) return [];
+    return this.allRows.filter((r) => set.has(r[HASH_KEY]));
+  }
+
+  /** Filter applies to the un-pinned rows; pinned ones bypass it entirely. */
+  @cached
+  get unpinnedFiltered(): Row[] {
+    const set = this.pinnedSet;
+    const headers = this.headers;
+    return this.filter.data
+      .map((row) => {
+        const obj = { [HASH_KEY]: rowHash(row) } as Row;
+        for (let i = 0; i < headers.length; i++) {
+          obj[colKey(i)] = row[i] ?? '';
+        }
+        return obj;
+      })
+      .filter((r) => !set.has(r[HASH_KEY]));
+  }
+
+  @cached
   get tableData(): Row[] {
     const sorts = this.sorts;
-    const data = this.rowsAsObjects;
+    const unpinned = this.unpinnedFiltered;
 
-    if (sorts.length === 0) return data;
+    const sorted =
+      sorts.length === 0
+        ? unpinned
+        : [...unpinned].sort((a, b) => {
+            for (const { property, direction } of sorts) {
+              const av = a[property] ?? '';
+              const bv = b[property] ?? '';
+              const af = parseFloat(av);
+              const bf = parseFloat(bv);
 
-    return [...data].sort((a, b) => {
-      for (const { property, direction } of sorts) {
-        const av = a[property] ?? '';
-        const bv = b[property] ?? '';
-        const af = parseFloat(av);
-        const bf = parseFloat(bv);
+              let result: number;
+              if (!isNaN(af) && !isNaN(bf)) {
+                result = af - bf;
+              } else {
+                result = av.localeCompare(bv);
+              }
 
-        let result: number;
-        if (!isNaN(af) && !isNaN(bf)) {
-          result = af - bf;
-        } else {
-          result = av.localeCompare(bv);
-        }
+              if (result !== 0) {
+                return direction === SortDirection.Descending
+                  ? -result
+                  : result;
+              }
+            }
+            return 0;
+          });
 
-        if (result !== 0) {
-          return direction === SortDirection.Descending ? -result : result;
-        }
-      }
-      return 0;
-    });
+    return [...this.pinnedRows, ...sorted];
   }
 
   @cached
@@ -162,40 +193,26 @@ export class DynamicTable extends Component<{
     const validation = this.qp.colorRangeFor(heading);
     if (!validation) return;
 
+    const range = this.rangeOf(hIndex);
+    if (!range || range.max === range.min) return;
+
     const interpolation = this.getInterpolation(
       hIndex,
       validation[1],
       validation[2]
     );
-
-    const max = this.maxOf(hIndex);
-    const min = this.minOf(hIndex);
-    if (max === min) return;
-    const normalized = (num - min) / (max - min);
+    const normalized = (num - range.min) / (range.max - range.min);
     const color = interpolation(normalized);
 
     return `oklch(${color.l} ${color.c} ${color.h}deg)`;
   };
 
-  #maxCache: Record<number, number> = {};
-  #minCache: Record<number, number> = {};
-  maxOf = (hIndex: number) => {
-    if (this.#maxCache[hIndex] !== undefined) return this.#maxCache[hIndex];
-    const values = this.args.rows
-      .map((row) => parseFloat(row[hIndex] ?? ''))
-      .filter((n) => !isNaN(n));
-    const max = Math.max(...values);
-    this.#maxCache[hIndex] = max;
-    return max;
-  };
-  minOf = (hIndex: number) => {
-    if (this.#minCache[hIndex] !== undefined) return this.#minCache[hIndex];
-    const values = this.args.rows
-      .map((row) => parseFloat(row[hIndex] ?? ''))
-      .filter((n) => !isNaN(n));
-    const min = Math.min(...values);
-    this.#minCache[hIndex] = min;
-    return min;
+  #rangeCache: Record<number, ReturnType<typeof numericRange>> = {};
+  rangeOf = (hIndex: number) => {
+    if (hIndex in this.#rangeCache) return this.#rangeCache[hIndex];
+    const r = numericRange(this.args.rows, hIndex);
+    this.#rangeCache[hIndex] = r;
+    return r;
   };
 
   #interpolationCache: Record<string, OklchInterpolator> = {};
@@ -217,17 +234,20 @@ export class DynamicTable extends Component<{
   }
 
   hasEnoughToSort = () => this.tableData.length > 1;
+  get colspanWithPin() {
+    return this.visibleColumns.length + 1;
+  }
   cellIndex = (key: string) => indexFromKey(key);
   cellValue = (row: Row, key: string) => row[key] ?? '';
-  isNumericKey = (key: string) =>
-    this.numericColumnFlags[indexFromKey(key)] ?? false;
   headerForKey = (key: string) => this.headers[indexFromKey(key)] ?? '';
 
-  // Local references so they can be used as helpers in <template>
+  // Local references so they can be used as helpers in <template>.
   sortAsc = sortAscending;
   sortDesc = sortDescending;
   isAsc = isAscending;
   isDesc = isDescending;
+  isPinned = isSelected;
+  togglePin = toggleRowSelection;
 
   <template>
     <div class="toolbar">
@@ -247,6 +267,7 @@ export class DynamicTable extends Component<{
         <table>
           <thead>
             <tr>
+              <th class="pin-col" aria-label="Pin row" />
               {{#each this.visibleColumns as |column|}}
                 <th {{this.table.modifiers.columnHeader column}}>
                   <div class="heading">
@@ -283,7 +304,22 @@ export class DynamicTable extends Component<{
           </thead>
           <tbody>
             {{#each this.table.rows as |row|}}
-              <tr>
+              <tr class="{{if (this.isPinned row) 'is-pinned'}}">
+                <td class="pin-col">
+                  <button
+                    type="button"
+                    class="pin-btn {{if (this.isPinned row) 'is-pinned'}}"
+                    aria-label={{if
+                      (this.isPinned row)
+                      "Unpin row"
+                      "Pin row to top"
+                    }}
+                    aria-pressed="{{this.isPinned row}}"
+                    {{on "click" (fn this.togglePin row)}}
+                  >
+                    <span aria-hidden="true">📌</span>
+                  </button>
+                </td>
                 {{#each this.visibleColumns as |column|}}
                   {{! NOTE: not sanitized, because no user data is captured on this site.
                             Also, github sanitizes on save }}
@@ -299,7 +335,7 @@ export class DynamicTable extends Component<{
               </tr>
             {{else}}
               <tr>
-                <td colspan={{this.visibleColumns.length}} class="no-results">No
+                <td colspan={{this.colspanWithPin}} class="no-results">No
                   results</td>
               </tr>
             {{/each}}

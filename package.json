@@ -65,7 +65,7 @@
     "version": 2
   },
   "imports": {
-    "#utils": "./app/utils.ts",
+    "#utils/*": "./app/utils/*",
     "#components/*": "./app/components/*",
     "#services/*": "./app/services/*",
     "#routes/*": "./app/routes/*"
