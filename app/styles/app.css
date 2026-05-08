@@ -53,14 +53,41 @@
  * transition-*` pseudo-elements only exist while a transition is in
  * flight, so this rule is a no-op the rest of the time.
  */
-::view-transition-old(root),
+/*
+ * Circular wipe anchored at the user's click. The OLD snapshot is
+ * pinned in place while the NEW snapshot reveals over it via an
+ * expanding `clip-path: circle()`. The center is supplied by the
+ * `--vt-x` / `--vt-y` custom properties that `header.gts` writes
+ * onto `<html>` from the click event; falling back to the page
+ * center keeps the effect sane if the API is invoked from elsewhere.
+ *
+ * The radius `150vmax` overshoots the viewport diagonal regardless of
+ * where the click lands, so the new theme always fully covers the
+ * page by the end of the animation.
+ */
+::view-transition-old(root) {
+  animation: none;
+  /* The new snapshot sits on top of the old; keep the old completely
+     opaque underneath so we don't see-through to the page itself. */
+  z-index: 1;
+}
+
 ::view-transition-new(root) {
-  animation-duration: 0.3s;
-  animation-timing-function: ease-in-out;
+  animation: theme-wipe 0.55s ease-out forwards;
+  z-index: 2;
+  mix-blend-mode: normal;
+}
+
+@keyframes theme-wipe {
+  from {
+    clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%));
+  }
+  to {
+    clip-path: circle(150vmax at var(--vt-x, 50%) var(--vt-y, 50%));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
   ::view-transition-new(root) {
     animation-duration: 0.01ms;
   }

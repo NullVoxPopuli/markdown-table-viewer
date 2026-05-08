@@ -6,17 +6,22 @@ function isDark() {
   return colorScheme.isDark;
 }
 
-function toggle() {
+function toggle(event: MouseEvent) {
   const next = colorScheme.isDark ? 'light' : 'dark';
-  // View Transitions API: snapshot current paint, flip the theme,
-  // snapshot the new paint, then cross-fade the two as a single
-  // page-level animation. Falls back to an instant swap on browsers
-  // that don't support the API (currently Firefox without the flag).
-  if (typeof document.startViewTransition === 'function') {
-    document.startViewTransition(() => colorScheme.update(next));
-  } else {
+
+  if (typeof document.startViewTransition !== 'function') {
     colorScheme.update(next);
+    return;
   }
+
+  // Anchor the wipe at the cursor / toggle-button position so the
+  // new theme appears to ripple out from where the user clicked.
+  // CSS reads these via `var(--vt-x)` / `var(--vt-y)` on the
+  // `::view-transition-new(root)` pseudo-element.
+  document.documentElement.style.setProperty('--vt-x', `${event.clientX}px`);
+  document.documentElement.style.setProperty('--vt-y', `${event.clientY}px`);
+
+  document.startViewTransition(() => colorScheme.update(next));
 }
 
 export const Header = <template>
