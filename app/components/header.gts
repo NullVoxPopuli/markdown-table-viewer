@@ -6,8 +6,22 @@ function isDark() {
   return colorScheme.isDark;
 }
 
-function toggle() {
-  colorScheme.update(colorScheme.isDark ? 'light' : 'dark');
+function toggle(event: MouseEvent) {
+  const next = colorScheme.isDark ? 'light' : 'dark';
+
+  if (typeof document.startViewTransition !== 'function') {
+    colorScheme.update(next);
+    return;
+  }
+
+  // Anchor the wipe at the cursor / toggle-button position so the
+  // new theme appears to ripple out from where the user clicked.
+  // CSS reads these via `var(--vt-x)` / `var(--vt-y)` on the
+  // `::view-transition-new(root)` pseudo-element.
+  document.documentElement.style.setProperty('--vt-x', `${event.clientX}px`);
+  document.documentElement.style.setProperty('--vt-y', `${event.clientY}px`);
+
+  document.startViewTransition(() => colorScheme.update(next));
 }
 
 export const Header = <template>
