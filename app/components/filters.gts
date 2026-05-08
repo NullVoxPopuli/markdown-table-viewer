@@ -1,13 +1,12 @@
 import Component from '@glimmer/component';
-import { Form } from 'ember-primitives/components/form';
 import { on } from '@ember/modifier';
-import { guidFor } from '@ember/object/internals';
 import { cached, tracked } from '@glimmer/tracking';
-import type { TOC } from '@ember/component/template-only';
 
 interface FormFilters {
   [column: string]: string | string[];
 }
+
+type Row = Record<string, string>;
 
 export class Filter {
   @tracked filters: undefined | FormFilters;
@@ -16,103 +15,148 @@ export class Filter {
     this.filters = newValues as FormFilters;
   };
 
-  #dataFn: () => string[][];
-  #headerFn: () => string[];
+  hasFilterFor = (column: string): boolean => {
+    const f = this.filters;
+    if (!f) return false;
+    const search = f[`${column}-search`];
+    const multi = f[column];
+    return (
+      (typeof search === 'string' && search.length > 0) ||
+      (Array.isArray(multi) && multi.length > 0)
+    );
+  };
 
-  constructor(options: { data: () => string[][]; headers: () => string[] }) {
+  clearColumn = (column: string) => {
+    const current = this.filters;
+    if (!current) return;
+    const next = { ...current };
+    delete next[column];
+    delete next[`${column}-search`];
+    this.filters = next;
+  };
+
+  #dataFn: () => Row[];
+
+  constructor(options: { data: () => Row[] }) {
     this.#dataFn = options.data;
-    this.#headerFn = options.headers;
   }
 
+  /**
+   * The full data set, exposed for callers that want to derive
+   * dropdown options. Filtering itself is intentionally _not_ applied
+   * here — the consumer hides non-matching rows in the DOM via
+   * {@link Filter.matchesRow} instead of rebuilding the row array on
+   * every filter change.
+   */
   @cached
-  private get incomingData() {
+  get data(): Row[] {
     return this.#dataFn();
   }
 
-  get headers() {
-    return this.#headerFn();
-  }
-
-  @cached
-  get data() {
-    const rows = this.incomingData;
-    const headers = this.headers;
+  /**
+   * Does `row` pass the active filters?
+   *
+   * Each form field is keyed either by column name (multi-select
+   * picker) or `<column>-search` (free-text search). An empty value
+   * means "no constraint on that column".
+   */
+  matchesRow(row: Row): boolean {
     const filters = this.filters;
+    if (!filters) return true;
 
-    if (!filters) {
-      return rows;
+    for (const [filterName, value] of Object.entries(filters)) {
+      if (value.length === 0) continue;
+
+      if (filterName.endsWith('-search')) {
+        if (Array.isArray(value)) continue; // not allowed
+        const headerName = filterName.replace(/-search$/, '');
+        if (!row[headerName]?.includes(value)) return false;
+        continue;
+      }
+
+      if (!Array.isArray(value)) continue; // not allowed
+      if (!value.some((v) => row[filterName]?.includes(v))) return false;
     }
-
-    return rows.filter((row) => {
-      return Object.entries(filters).every(([filterName, filters]) => {
-        if (filters.length === 0) return true;
-
-        if (filterName.endsWith('-search')) {
-          if (Array.isArray(filters)) return true; // not allowed
-          const headerName = filterName.replace(/-search$/, '');
-          const hIndex = headers.indexOf(headerName);
-          return row[hIndex]?.includes(filters);
-        }
-
-        if (!Array.isArray(filters)) return true; // not allowed
-
-        const hIndex = headers.indexOf(filterName);
-        return filters.some((filter) => row[hIndex]?.includes(filter));
-      });
-    });
+    return true;
   }
 }
 
-export const FilterForm = <template>
-  <section class="filters">
-    <h2>Filters</h2>
-    <Form @onChange={{@filters.handleChange}}>
-      <div>
-        {{#each @filters.headers as |header|}}
-          <Filters
-            @column={{header}}
-            @headers={{@filters.headers}}
-            @rows={{@filters.data}}
-          />
-        {{/each}}
-      </div>
-      <input
-        aria-label="Clear the form"
-        type="reset"
-        value="Clear"
-        {{on "click" @filters.clear}}
-      />
-    </Form>
-  </section>
-</template> satisfies TOC<{ filters: Filter }>;
-
 export class Filters extends Component<{
-  column: string;
-  headers: string[];
-  rows: string[][];
+  Args: {
+    column: string;
+    filter: Filter;
+  };
 }> {
-  id = guidFor(this);
-
   get options() {
-    const { column, headers, rows } = this.args;
-    const index = headers.indexOf(column);
-
-    const data = new Set(rows.map((row) => row[index]?.trim()).filter(Boolean));
-    return data;
+    const { column, filter } = this.args;
+    return new Set(
+      filter.data.map((row) => row[column]?.trim()).filter(Boolean)
+    );
   }
+
+  get hasOptions() {
+    return this.options.size > 0;
+  }
+
+  get isActive() {
+    return this.args.filter.hasFilterFor(this.args.column);
+  }
+
+  /**
+   * Per-column clear: wipe the DOM controls for this filter, then dispatch
+   * a bubbling `input` event so ember-primitives' Form re-reads the form
+   * data and calls our `onChange` with the empty values.
+   */
+  handleClear = (event: MouseEvent) => {
+    event.preventDefault();
+    const button = event.currentTarget as HTMLElement;
+    const wrapper = button.closest('.dynamic-filter');
+    if (!wrapper) return;
+
+    const search =
+      wrapper.querySelector<HTMLInputElement>('input[type="text"]');
+    if (search) search.value = '';
+
+    const select = wrapper.querySelector<HTMLSelectElement>('select');
+    if (select) {
+      for (const opt of Array.from(select.options)) opt.selected = false;
+    }
+
+    wrapper.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
   <template>
-    <span class="dynamic-filter">
-      <span>
-        <label for={{this.id}}>{{@column}}</label>
-
-        <input aria-label="Search for {{@column}}" name="{{@column}}-search" />
-
+    <div class="dynamic-filter">
+      <span class="filter-row">
+        <input
+          type="text"
+          aria-label="Search {{@column}}"
+          placeholder="Search…"
+          name="{{@column}}-search"
+          autocomplete="off"
+        />
+        {{#if this.isActive}}
+          <button
+            type="button"
+            class="filter-clear"
+            aria-label="Clear filter for {{@column}}"
+            title="Clear {{@column}} filter"
+            {{on "click" this.handleClear}}
+          ><span aria-hidden="true">×</span></button>
+        {{/if}}
       </span>
-      <select id={{this.id}} multiple name={{@column}}>
-        {{#each this.options as |opt|}}
-          <option value={{opt}}>{{opt}}</option>
-        {{/each}}
-      </select>
-    </span>
+      {{#if this.hasOptions}}
+        <select
+          multiple
+          aria-label="Filter {{@column}}"
+          name={{@column}}
+          size="3"
+        >
+          {{#each this.options as |opt|}}
+            <option value={{opt}}>{{opt}}</option>
+          {{/each}}
+        </select>
+      {{/if}}
+    </div>
   </template>
 }

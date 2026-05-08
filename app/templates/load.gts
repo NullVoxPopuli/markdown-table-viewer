@@ -3,7 +3,7 @@ import type RouterService from '@ember/routing/router-service';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { dataFromEvent } from 'ember-primitives/components/form';
-import { urlToRaw } from '#utils';
+import { urlToRaw } from '#utils/url.ts';
 import { tracked } from '@glimmer/tracking';
 
 class Form extends Component {

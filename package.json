@@ -65,7 +65,7 @@
     "version": 2
   },
   "imports": {
-    "#utils": "./app/utils.ts",
+    "#utils/*": "./app/utils/*",
     "#components/*": "./app/components/*",
     "#services/*": "./app/services/*",
     "#routes/*": "./app/routes/*"
@@ -77,6 +77,7 @@
   "dependencies": {
     "@ember/app-tsconfig": "^2.0.0",
     "@ember/test-waiters": "^4.1.1",
+    "@universal-ember/table": "^3.6.2",
     "culori": "^4.0.2",
     "ember-primitives": "^0.57.0",
     "marked": "^18.0.3",

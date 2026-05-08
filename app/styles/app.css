@@ -1,82 +1,184 @@
 :root {
-  --light-bg: #fff;
-  --light-fg: #000;
+  /*
+   * Theme variables resolve via the CSS `light-dark()` function, which
+   * picks the value matching the active `color-scheme`. ember-primitives'
+   * `colorScheme.update()` (and its `sync()` boot hook) writes
+   * `color-scheme: dark` or `color-scheme: light` onto <html>, so changing
+   * the theme just retargets `light-dark()` — no JS-driven CSS attribute
+   * needed.
+   */
+  color-scheme: light dark;
 
-  --dark-bg: #151515;
-  --dark-fg: #efefef;
+  --bg: light-dark(#fff, #151515);
+  --fg: light-dark(#1a1a1a, #efefef);
+  --muted: light-dark(#6a6a6a, #9a9a9a);
+  --border: light-dark(#e2e2e6, #2a2a2e);
+  --row-alt: light-dark(#fafafa, #1b1b1d);
+  --row-hover: light-dark(#f1f4ff, #232331);
+  --control-bg: light-dark(#f5f5f7, #1f1f22);
 
-  --current-fg: var(--light-fg);
+  --accent: light-dark(#6464ff, #8a8aff);
+  --accent-soft: light-dark(
+    rgba(100, 100, 255, 0.15),
+    rgba(138, 138, 255, 0.18)
+  );
+
+  --shadow-sm: light-dark(
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.4)
+  );
+  --shadow-md: light-dark(
+    0 6px 18px rgba(0, 0, 0, 0.08),
+    0 6px 18px rgba(0, 0, 0, 0.5)
+  );
+
+  --radius: 8px;
+  --radius-sm: 4px;
+
+  --font-stack:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--light-bg);
-  color: var(--light-fg);
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-stack);
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+  font-size: 14px;
+  line-height: 1.5;
 }
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:visited {
+    color: var(--accent);
+  }
+}
+
+select,
+input,
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+select,
+input[type='text'] {
+  background: var(--control-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.6rem;
+  outline-offset: 2px;
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+  }
+}
+
 header {
-  background: var(--light-bg);
-  color: var(--light-fg);
-  box-shadow: 0 4px 4px -4px rgba(0, 0, 0, 0.2);
+  background: var(--bg);
+  color: var(--fg);
+  border-bottom: 1px solid var(--border);
   width: 100%;
-  height: 64px;
+  height: 60px;
   position: sticky;
   top: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  z-index: 10;
 
   > span {
     margin: 0 auto;
-    max-width: 800px;
-    min-width: 500px;
+    width: 100%;
+    max-width: 1100px;
+    padding: 0 1.25rem;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
   }
 }
 
-select {
-  font-family: Arial;
-}
+.home-link {
+  text-decoration: none;
+  color: var(--fg);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --current-fg: var(--dark-fg);
-  }
-
-  body {
-    background: var(--dark-bg);
-    color: var(--dark-fg);
-
-    a {
-      color: #7777ff;
-
-      &:visited {
-        color: #5a5aff;
-      }
-    }
-
-    select,
-    input {
-      background: var(--dark-bg);
-      color: var(--dark-fg);
-    }
-
-    input {
-      display: inline-block;
-      border: 1px solid var(--dark-fg);
-    }
-  }
-
-  header {
-    background: var(--dark-bg);
-    color: var(--dark-fg);
+  &:hover {
+    text-decoration: none;
+    color: var(--accent);
   }
 }
 
-@media (width <= 450px) {
-  .hide-sm {
-    display: none;
+.header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: auto;
+  min-width: 0;
+}
+
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--fg);
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+
+  &:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
   }
+}
+
+main {
+  /*
+   * Table content can be far wider than typical text — let it claim
+   * the full viewport width. The table-scroll container's
+   * `overflow: auto` (set below) keeps narrow viewports usable by
+   * scrolling horizontally instead of forcing a horizontal scroll on
+   * the document.
+   */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  padding: 0 1.25rem 2rem;
+  gap: 1rem;
+  min-width: 0;
+}
+
+main > * {
+  min-width: 0;
 }
 
 h1 {
@@ -86,129 +188,585 @@ h1 {
 
 .small {
   font-size: 0.8rem;
+  color: var(--muted);
 }
 
-body {
-  display: grid;
+p.small {
+  margin: 0;
+  text-align: center;
+  word-break: break-all;
+}
+
+@media (width <= 450px) {
+  .hide-sm {
+    display: none;
+  }
+}
+
+/* ---------- Toolbar ---------- */
+
+.toolbar {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
   gap: 0.5rem;
-  justify-content: center;
-  justify-items: center;
-  font-family: Arial;
 }
 
-.home-link {
-  text-decoration: none;
-  color: currentColor;
+.settings-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  background: var(--control-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  cursor: pointer;
+  font-weight: 500;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+/* ---------- Settings popover ---------- */
+
+.settings-popover {
+  position: absolute;
+  inset: auto;
+  margin: 0;
+  width: min(420px, calc(100vw - 2rem));
+  max-height: min(70vh, 600px);
+  overflow-y: auto;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  font-family: var(--font-stack);
+  font-size: 14px;
+}
+
+.settings-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--control-bg);
+
+  h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+
+  &:hover {
+    color: var(--fg);
+    background: var(--accent-soft);
+  }
+}
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.link-btn {
+  background: transparent;
+  border: none;
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.85rem;
 
   &:hover {
     text-decoration: underline;
+    background: var(--accent-soft);
   }
 }
 
-main {
-  display: grid;
-  justify-items: center;
+.settings-columns {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0;
+}
+
+.settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+
+  &:hover {
+    background: var(--row-alt);
+  }
+
+  .visibility {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .col-name {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .highlight-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    padding-left: 1.6rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .highlight-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+  }
+
+  .color-pickers {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+
+    input[type='color'] {
+      width: 32px;
+      height: 24px;
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .color-swap {
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      line-height: 1;
+      transition:
+        background 0.15s,
+        border-color 0.15s,
+        color 0.15s;
+
+      &:hover {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+    }
+  }
+}
+
+/* ---------- Pin column ---------- */
+
+.pin-col {
+  width: 36px;
+  padding: 0.4rem 0.25rem !important;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.pin-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.15rem 0.3rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  line-height: 1;
+  opacity: 0.25;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
+
+  &:hover {
+    opacity: 0.7;
+    background: var(--accent-soft);
+  }
+
+  &.is-pinned {
+    opacity: 1;
+    color: var(--accent);
+  }
+}
+
+/*
+ * Pinned rows live in their own <tbody class="pinned-rows"> so they
+ * naturally stack at the top of the table — multiple pinned rows pile
+ * up in source order without overlapping. The whole tbody sticks below
+ * the (also sticky) thead, with `--head-offset` set live by the
+ * `stickyOffset` modifier in dynamic-table.gts so it positions
+ * correctly even when the head re-flows (variable filter widget
+ * heights, etc.).
+ */
+tbody.pinned-rows {
+  position: sticky;
+  top: var(--head-offset, 0);
+  z-index: 1;
+}
+
+tbody.pinned-rows tr.is-pinned td {
+  /*
+   * Sticky cells layer over the rows that scroll past them, so they
+   * need an opaque background. `color-mix` with `--bg` keeps the
+   * accent tint while staying readable.
+   */
+  background: color-mix(in srgb, var(--accent) 15%, var(--bg));
+}
+
+tbody.pinned-rows tr.is-pinned td:first-child {
+  box-shadow: inset 4px 0 0 var(--accent);
+}
+
+tbody.pinned-rows tr.is-pinned:last-child td {
+  border-bottom: 2px solid var(--accent);
+}
+
+/*
+ * Filter is applied via this class rather than by slicing the data
+ * array — keeps Row identities stable and avoids a churning array on
+ * every keystroke. Pinned rows always show, even when they wouldn't
+ * pass the filter on their own.
+ */
+tr.is-filtered-out:not(.is-pinned) {
+  display: none;
+}
+
+/* ---------- Inline filters ---------- */
+
+.dynamic-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  min-width: 140px;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: 0;
+
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    width: 100%;
+  }
+
+  input[type='text'] {
+    flex: 1;
+    min-width: 0;
+    padding: 0.25rem 0.45rem;
+    font-size: 0.8rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--fg);
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+  }
+
+  .filter-clear {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    cursor: pointer;
+    line-height: 1;
+    font-size: 0.85rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      background 0.15s,
+      border-color 0.15s,
+      color 0.15s;
+
+    &:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+  }
+
+  select {
+    width: 100%;
+    padding: 0.25rem;
+    font-size: 0.75rem;
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    min-height: 4.5rem;
+    font-family: inherit;
+    font-weight: normal;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+  }
+}
+
+.clear-filters {
+  align-self: center;
+  font-size: 0.85rem;
+}
+
+/* ---------- Table ---------- */
+
+.table-scroll {
+  width: 100%;
+  /*
+   * Owns its own scroll axes so `position: sticky` on thead and on
+   * pinned rows resolve against this container. Capped to viewport
+   * height (minus the sticky page header) so the surrounding toolbar
+   * and "viewing X" line stay above the scroll surface.
+   */
+  overflow: auto;
+  max-height: calc(100vh - 6rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  box-shadow: var(--shadow-sm);
 }
 
 table {
-  margin-top: 2rem;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+
+  thead {
+    background: var(--control-bg);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  th {
+    text-align: left;
+    font-size: 0.85rem;
+    color: var(--muted);
+    padding: 0.65rem 0.85rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  th .name {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+
+  td {
+    padding: 0.6rem 0.85rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tbody tr {
+    transition: background 0.1s ease;
+
+    &:nth-child(even) {
+      background: var(--row-alt);
+    }
+
+    &:hover {
+      background: var(--row-hover);
+    }
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
 
   .heading {
     display: flex;
-    justify-content: center;
-    align-items: baseline;
+    justify-content: space-between;
+    align-items: center;
     gap: 0.5rem;
+  }
 
-    button {
-      padding: 0.125rem 0.125rem;
-      background: none;
-      border: none;
-      color: var(--current-fg);
+  .name {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sort-controls {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1;
+  }
+
+  .sort-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 1px 4px;
+    font-size: 0.6rem;
+    border-radius: 2px;
+    line-height: 1;
+    transition:
+      color 0.1s,
+      background 0.1s;
+
+    &:hover {
+      color: var(--fg);
+      background: var(--accent-soft);
+    }
+
+    &.is-active {
+      color: var(--accent);
     }
   }
 
-  th,
-  td {
-    padding: 0.5rem 0.5rem;
+  .no-results {
+    text-align: center;
+    color: var(--muted);
+    padding: 2rem;
+    font-style: italic;
   }
 }
 
-.dynamic-filter {
-  display: inline-grid;
-  gap: 0.5rem;
-
-  > span {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    input {
-      max-width: 50px;
-    }
-  }
-}
-
-.filters h2 {
-  font-size: 1.25rem;
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-.filters {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    align-items: start;
-  }
-
-  label span {
-    font-size: 0.85rem;
-  }
-}
+/* ---------- Load form ---------- */
 
 form.load-form {
   margin-top: 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 600px;
+  background: var(--control-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
 
   .buttons {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
   }
 
-  .url {
-    input {
-      font-size: 1.25rem;
-      padding: 0.5rem 1rem;
-    }
+  .url input,
+  .key input {
+    width: 100%;
+    padding: 0.6rem 0.85rem;
   }
-  .key {
-    input {
-      padding: 0.5rem 1rem;
-    }
+
+  .url input {
+    font-size: 1rem;
   }
 
   label {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.4rem;
     flex-direction: column;
-    align-items: center;
-    input {
-      width: 100%;
+    align-items: stretch;
+    width: 100%;
+
+    > span {
+      font-weight: 600;
+      color: var(--fg);
     }
   }
 
   button,
   input[type='reset'] {
-    padding: 0.125rem 0.125rem;
-    background: none;
-    border: none;
-    color: var(--current-fg);
+    padding: 0.45rem 1rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--fg);
+    cursor: pointer;
+    transition:
+      background 0.15s,
+      border-color 0.15s,
+      color 0.15s;
+
+    &:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+  }
+
+  button[type='submit'] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+
+    &:hover {
+      background: var(--accent);
+      filter: brightness(1.1);
+      color: white;
+    }
+  }
+
+  .error {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 80, 80, 0.1);
+    border: 1px solid rgba(255, 80, 80, 0.3);
+    border-radius: var(--radius-sm);
+    color: #cc3333;
   }
 }

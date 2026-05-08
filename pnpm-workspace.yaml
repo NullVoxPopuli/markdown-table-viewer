@@ -2,3 +2,5 @@ autoInstallPeers: false
 strictPeerDependencies: true
 resolvePeersFromWorkspaceRoot: false
 resolutionMode: highest
+allowBuilds:
+  core-js: false

@@ -24,6 +24,10 @@ export default class IndexRoute extends Route {
     key: { refreshModel: true },
     // post-fetch customizations
     cv: { /* custom validations */ refreshModel: false },
+    prefs: {
+      /* @universal-ember/table preferences blob */ refreshModel: false,
+    },
+    pinned: { refreshModel: false },
     // Not implemented yet, but should be
     sort: { refreshModel: false },
     filter: { refreshModel: false },
@@ -108,11 +112,20 @@ function findTable(text: string, key: string | undefined) {
   }
 
   const [heading, , ...rowData] = table;
+  if (!heading) return { headers: [], rows: [] };
 
-  // We don't .trim(), because there could be empty cells
-  // e.g.: |    |
-  const headers = heading.split('|').filter(Boolean);
-  const rows = rowData.map((row) => row.split('|').filter(Boolean));
+  // Strip the leading/trailing empty entries from `| a | b |` and trim
+  // each cell. Slicing instead of `filter(Boolean)` so that whitespace-
+  // only cells (`|    |`) keep their column position as `""` rather than
+  // collapsing the row.
+  const splitCells = (line: string): string[] =>
+    line
+      .split('|')
+      .slice(1, -1)
+      .map((c) => c.trim());
+
+  const headers = splitCells(heading);
+  const rows = rowData.map(splitCells);
 
   return { headers, rows };
 }
