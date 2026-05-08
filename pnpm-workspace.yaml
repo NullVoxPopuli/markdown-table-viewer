@@ -1,0 +1,4 @@
+autoInstallPeers: false
+strictPeerDependencies: true
+resolvePeersFromWorkspaceRoot: false
+resolutionMode: highest
