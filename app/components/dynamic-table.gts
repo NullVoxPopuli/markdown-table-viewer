@@ -3,7 +3,8 @@ import { cached, tracked } from '@glimmer/tracking';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { service } from '@ember/service';
-import { Filter, FilterForm } from './filters.gts';
+import { Filter, Filters } from './filters.gts';
+import { Form } from 'ember-primitives/components/form';
 import { Settings } from './settings.gts';
 import { link } from 'reactiveweb/link';
 import { parseInline } from 'marked';
@@ -60,9 +61,14 @@ export class DynamicTable extends Component<{
 }> {
   @service declare qp: QPService;
 
+  @cached
+  get headers(): string[] {
+    return this.args.headers.map((h) => h.trim());
+  }
+
   @link filter = new Filter({
     data: () => this.args.rows,
-    headers: () => this.args.headers,
+    headers: () => this.headers,
     isHidden: (header) => this.qp.isHidden(header),
   });
 
@@ -83,7 +89,7 @@ export class DynamicTable extends Component<{
   @cached
   get columns() {
     const hidden = new Set(this.qp.hiddenColumns);
-    return this.args.headers.map((name, index) => ({
+    return this.headers.map((name, index) => ({
       name,
       key: colKey(index),
       pluginOptions: [
@@ -101,7 +107,7 @@ export class DynamicTable extends Component<{
 
   @cached
   get rowsAsObjects(): Row[] {
-    const headers = this.args.headers;
+    const headers = this.headers;
     return this.filter.data.map((row) => {
       const obj: Row = {};
       for (let i = 0; i < headers.length; i++) {
@@ -142,12 +148,12 @@ export class DynamicTable extends Component<{
 
   @cached
   get numericColumnFlags(): boolean[] {
-    return this.args.headers.map((_, i) => isNumericColumn(this.args.rows, i));
+    return this.headers.map((_, i) => isNumericColumn(this.args.rows, i));
   }
 
   colorFor = (hIndex: number, value: string) => {
     if (!value) return;
-    const heading = this.args.headers[hIndex];
+    const heading = this.headers[hIndex];
     if (!heading) return;
     const num = parseFloat(value);
 
@@ -215,6 +221,7 @@ export class DynamicTable extends Component<{
   cellValue = (row: Row, key: string) => row[key] ?? '';
   isNumericKey = (key: string) =>
     this.numericColumnFlags[indexFromKey(key)] ?? false;
+  headerForKey = (key: string) => this.headers[indexFromKey(key)] ?? '';
 
   // Local references so they can be used as helpers in <template>
   sortAsc = sortAscending;
@@ -224,67 +231,81 @@ export class DynamicTable extends Component<{
 
   <template>
     <div class="toolbar">
+      <button
+        type="button"
+        class="link-btn clear-filters"
+        {{on "click" this.filter.clear}}
+      >Clear filters</button>
       <Settings
         @columns={{this.columns}}
         @numericFlags={{this.numericColumnFlags}}
       />
     </div>
 
-    <FilterForm @filters={{this.filter}} />
-
-    <div class="table-scroll" {{this.table.modifiers.container}}>
-      <table>
-        <thead>
-          <tr>
-            {{#each this.visibleColumns as |column|}}
-              <th {{this.table.modifiers.columnHeader column}}>
-                <div class="heading">
-                  <span class="name">{{column.name}}</span>
-                  {{#if (this.hasEnoughToSort)}}
-                    <span class="sort-controls">
-                      <button
-                        type="button"
-                        class="sort-btn {{if (this.isAsc column) 'is-active'}}"
-                        aria-label="Sort {{column.name}} ascending"
-                        aria-pressed="{{this.isAsc column}}"
-                        {{on "click" (fn this.sortAsc column)}}
-                      >▲</button>
-                      <button
-                        type="button"
-                        class="sort-btn {{if (this.isDesc column) 'is-active'}}"
-                        aria-label="Sort {{column.name}} descending"
-                        aria-pressed="{{this.isDesc column}}"
-                        {{on "click" (fn this.sortDesc column)}}
-                      >▼</button>
-                    </span>
-                  {{/if}}
-                </div>
-              </th>
-            {{/each}}
-          </tr>
-        </thead>
-        <tbody>
-          {{#each this.table.rows as |row|}}
+    <Form @onChange={{this.filter.handleChange}}>
+      <div class="table-scroll" {{this.table.modifiers.container}}>
+        <table>
+          <thead>
             <tr>
               {{#each this.visibleColumns as |column|}}
-                {{! NOTE: not sanitized, because no user data is captured on this site.
-                          Also, github sanitizes on save }}
-                <td
-                  style="background: {{this.colorFor
-                    (this.cellIndex column.key)
-                    (this.cellValue row.data column.key)
-                  }}"
-                >{{{convertMarkdown (this.cellValue row.data column.key)}}}</td>
+                <th {{this.table.modifiers.columnHeader column}}>
+                  <div class="heading">
+                    <span class="name">{{column.name}}</span>
+                    {{#if (this.hasEnoughToSort)}}
+                      <span class="sort-controls">
+                        <button
+                          type="button"
+                          class="sort-btn
+                            {{if (this.isAsc column) 'is-active'}}"
+                          aria-label="Sort {{column.name}} ascending"
+                          aria-pressed="{{this.isAsc column}}"
+                          {{on "click" (fn this.sortAsc column)}}
+                        >▲</button>
+                        <button
+                          type="button"
+                          class="sort-btn
+                            {{if (this.isDesc column) 'is-active'}}"
+                          aria-label="Sort {{column.name}} descending"
+                          aria-pressed="{{this.isDesc column}}"
+                          {{on "click" (fn this.sortDesc column)}}
+                        >▼</button>
+                      </span>
+                    {{/if}}
+                  </div>
+                  <Filters
+                    @column={{this.headerForKey column.key}}
+                    @headers={{this.filter.headers}}
+                    @rows={{this.filter.data}}
+                  />
+                </th>
               {{/each}}
             </tr>
-          {{else}}
-            <tr>
-              <td colspan={{this.visibleColumns.length}} class="no-results">No
-                results</td>
-            </tr>
-          {{/each}}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {{#each this.table.rows as |row|}}
+              <tr>
+                {{#each this.visibleColumns as |column|}}
+                  {{! NOTE: not sanitized, because no user data is captured on this site.
+                            Also, github sanitizes on save }}
+                  <td
+                    style="background: {{this.colorFor
+                      (this.cellIndex column.key)
+                      (this.cellValue row.data column.key)
+                    }}"
+                  >{{{convertMarkdown
+                      (this.cellValue row.data column.key)
+                    }}}</td>
+                {{/each}}
+              </tr>
+            {{else}}
+              <tr>
+                <td colspan={{this.visibleColumns.length}} class="no-results">No
+                  results</td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    </Form>
   </template>
 }

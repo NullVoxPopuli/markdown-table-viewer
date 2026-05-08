@@ -1,9 +1,6 @@
 import Component from '@glimmer/component';
-import { Form } from 'ember-primitives/components/form';
-import { on } from '@ember/modifier';
 import { guidFor } from '@ember/object/internals';
 import { cached, tracked } from '@glimmer/tracking';
-import type { TOC } from '@ember/component/template-only';
 
 interface FormFilters {
   [column: string]: string | string[];
@@ -81,33 +78,12 @@ export class Filter {
   }
 }
 
-export const FilterForm = <template>
-  <section class="filters">
-    <h2>Filters</h2>
-    <Form @onChange={{@filters.handleChange}}>
-      <div>
-        {{#each @filters.visibleHeaders as |header|}}
-          <Filters
-            @column={{header}}
-            @headers={{@filters.headers}}
-            @rows={{@filters.data}}
-          />
-        {{/each}}
-      </div>
-      <input
-        aria-label="Clear the form"
-        type="reset"
-        value="Clear"
-        {{on "click" @filters.clear}}
-      />
-    </Form>
-  </section>
-</template> satisfies TOC<{ filters: Filter }>;
-
 export class Filters extends Component<{
-  column: string;
-  headers: string[];
-  rows: string[][];
+  Args: {
+    column: string;
+    headers: string[];
+    rows: string[][];
+  };
 }> {
   id = guidFor(this);
 
@@ -118,19 +94,33 @@ export class Filters extends Component<{
     const data = new Set(rows.map((row) => row[index]?.trim()).filter(Boolean));
     return data;
   }
+
+  get hasOptions() {
+    return this.options.size > 0;
+  }
+
   <template>
-    <span class="dynamic-filter">
-      <span>
-        <label for={{this.id}}>{{@column}}</label>
-
-        <input aria-label="Search for {{@column}}" name="{{@column}}-search" />
-
-      </span>
-      <select id={{this.id}} multiple name={{@column}}>
-        {{#each this.options as |opt|}}
-          <option value={{opt}}>{{opt}}</option>
-        {{/each}}
-      </select>
-    </span>
+    <div class="dynamic-filter">
+      <input
+        type="text"
+        aria-label="Search {{@column}}"
+        placeholder="Search…"
+        name="{{@column}}-search"
+        autocomplete="off"
+      />
+      {{#if this.hasOptions}}
+        <select
+          id={{this.id}}
+          multiple
+          aria-label="Filter {{@column}}"
+          name={{@column}}
+          size="3"
+        >
+          {{#each this.options as |opt|}}
+            <option value={{opt}}>{{opt}}</option>
+          {{/each}}
+        </select>
+      {{/if}}
+    </div>
   </template>
 }
