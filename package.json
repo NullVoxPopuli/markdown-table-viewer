@@ -4,13 +4,10 @@
   "version": "0.0.0",
   "private": true,
   "description": "Small description for table-viewer goes here",
-  "repository": "",
-  "license": "MIT",
-  "author": "",
-  "directories": {
-    "doc": "doc",
-    "test": "tests"
-  },
+  "repository": "https://github.com/NullVoxPopuli/markdown-table-viewer",
+  "license": "GPL-3.0",
+  "author": "NullVoxPopuli",
+  "package-manager": "pnpm@11.0.8",
   "scripts": {
     "build": "vite build",
     "lint": "concurrently \"pnpm:lint:*(!fix)\" --names \"lint:\" --prefixColors auto",
