@@ -33,7 +33,6 @@ import { rowHash } from '#utils/row-hash.ts';
 import { compareRows } from '#utils/sort-rows.ts';
 import { stickyOffset } from '#utils/sticky-offset.ts';
 import { createUrlPreferencesAdapter } from '#utils/qp-preferences.ts';
-import { isNumericColumn } from '#utils/numeric.ts';
 import { Highlighting, colorFor } from '#utils/highlighting-plugin.ts';
 
 const HASH_KEY = '__hash';
@@ -48,17 +47,13 @@ export class DynamicTable extends Component<{
 }> {
   @service declare qp: QPService;
 
-  @cached
-  get headers(): string[] {
-    return this.args.headers.map((h) => h.trim());
-  }
-
   /**
    * Source rows mapped onto the object shape the headless table expects.
-   * Keys are the trimmed header names, so the column's `key` and
-   * `name` are the same string. There's no synthetic index — sorting,
+   * Keys are the column header names, so the column's `key` and `name`
+   * are the same string. There's no synthetic index — sorting,
    * filtering, color highlighting all address columns by their human
-   * name.
+   * name. Headers and cells are already trimmed by the route's
+   * `findTable`, so we don't normalize again here.
    *
    * `reactiveweb/map` keeps Row identity stable per source-row array,
    * so when the user toggles visibility/filter state we don't re-build
@@ -68,7 +63,7 @@ export class DynamicTable extends Component<{
     data: () => this.args.rows,
     map: (row: string[]): Row => {
       const obj = { [HASH_KEY]: rowHash(row) } as Row;
-      const headers = this.headers;
+      const headers = this.args.headers;
       for (let i = 0; i < headers.length; i++) {
         obj[headers[i] as string] = row[i] ?? '';
       }
@@ -102,7 +97,7 @@ export class DynamicTable extends Component<{
       })),
       ColumnVisibility,
       RowSelection.with(() => ({
-        selection: this.pinnedSet,
+        selection: new Set(this.qp.pinnedRows),
         key: (data: Row) => data[HASH_KEY],
         onSelect: (key: string) => this.qp.togglePin(key),
         onDeselect: (key: string) => this.qp.togglePin(key),
@@ -120,17 +115,12 @@ export class DynamicTable extends Component<{
 
   @cached
   get columns() {
-    return this.headers.map((name) => ({ name, key: name }));
+    return this.args.headers.map((name) => ({ name, key: name }));
   }
 
   /** Visible columns, supplied by the ColumnVisibility plugin. */
   get visibleColumns() {
     return tableColumns.for(this.table);
-  }
-
-  @cached
-  get pinnedSet(): Set<string> {
-    return new Set(this.qp.pinnedRows);
   }
 
   /**
@@ -145,10 +135,6 @@ export class DynamicTable extends Component<{
     if (sorts.length === 0) return rows;
     return [...rows].sort(compareRows(sorts));
   }
-
-  /** Numeric-ness check used to decide whether to render the color toggle in Settings. */
-  isNumeric = (key: string): boolean =>
-    isNumericColumn(this.allRows.values(), key);
 
   // The "no results" row spans pin column + every visible column.
   get colspanWithPin() {
@@ -171,10 +157,7 @@ export class DynamicTable extends Component<{
         class="link-btn clear-filters"
         {{on "click" this.filter.clear}}
       >Clear filters</button>
-      <Settings
-        @table={{this.table}}
-        @isNumeric={{this.isNumeric}}
-      />
+      <Settings @table={{this.table}} />
     </div>
 
     <Form @onChange={{this.filter.handleChange}}>

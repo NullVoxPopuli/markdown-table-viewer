@@ -13,6 +13,7 @@ import {
 } from '@universal-ember/table/plugins/column-visibility';
 import type { Column, Table } from '@universal-ember/table';
 
+import { hasNumericRange } from '#utils/highlighting-plugin.ts';
 import type QPService from '#services/qp.ts';
 
 const DEFAULT_LOW = '#ff5252';
@@ -24,11 +25,9 @@ function inputValue(event: Event): string {
   return '';
 }
 
-export class Settings<T> extends Component<{
+export class Settings<T extends Record<string, string>> extends Component<{
   Args: {
     table: Table<T>;
-    /** Whether `key` looks numeric — drives whether the color toggle shows. */
-    isNumeric: (key: string) => boolean;
   };
 }> {
   @service declare qp: QPService;
@@ -99,7 +98,11 @@ export class Settings<T> extends Component<{
     this.qp.conditionalValidations = [];
   };
 
-  isNumeric = (column: Column<T>) => this.args.isNumeric(column.key);
+  /**
+   * "Has any numeric data" — read off the Highlighting plugin's column
+   * metadata, which already computes (and caches) the per-column range.
+   */
+  isNumeric = (column: Column<T>) => hasNumericRange(column);
 
   <template>
     <Popover @placement="bottom-end" @offsetOptions={{8}} as |p|>
