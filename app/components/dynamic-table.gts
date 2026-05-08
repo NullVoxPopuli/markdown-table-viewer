@@ -16,7 +16,6 @@ import {
   DataSorting,
   isAscending,
   isDescending,
-  SortDirection,
   sortAscending,
   sortDescending,
 } from '@universal-ember/table/plugins/data-sorting';
@@ -34,6 +33,9 @@ import { colKey, indexFromKey } from '#utils/column-keys.ts';
 import { isNumericColumn, numericRange } from '#utils/numeric.ts';
 import { convertMarkdown } from '#utils/markdown.ts';
 import { rowHash } from '#utils/row-hash.ts';
+import { compareRows } from '#utils/sort-rows.ts';
+import { stickyOffset } from '#utils/sticky-offset.ts';
+import { createUrlPreferencesAdapter } from '#utils/qp-preferences.ts';
 
 const HASH_KEY = '__hash';
 
@@ -53,6 +55,12 @@ export class DynamicTable extends Component<{
     return this.args.headers.map((h) => h.trim());
   }
 
+  /**
+   * Source rows are reused for both the original `string[][]` filter
+   * matching path and per-row hashing for pinning. Looking up a Row by
+   * its source array is the cheapest way to keep identities stable
+   * across renders.
+   */
   @link filter = new Filter({
     data: () => this.args.rows,
     headers: () => this.headers,
@@ -63,6 +71,16 @@ export class DynamicTable extends Component<{
   table = headlessTable<Row>(this, {
     columns: () => this.columns,
     data: () => this.tableData,
+    /*
+     * Plugins that speak the `preferences` API (currently
+     * ColumnVisibility) round-trip their state through this URL-backed
+     * adapter, so URL sharing happens for free without per-plugin
+     * plumbing on our side.
+     */
+    preferences: () => ({
+      key: 'table-viewer',
+      adapter: createUrlPreferencesAdapter(this.qp.router),
+    }),
     plugins: [
       DataSorting.with(() => ({
         sorts: this.sorts,
@@ -80,30 +98,22 @@ export class DynamicTable extends Component<{
 
   @cached
   get columns() {
-    const hidden = new Set(this.qp.hiddenColumns);
     return this.headers.map((name, index) => ({
       name,
       key: colKey(index),
-      pluginOptions: [
-        ColumnVisibility.forColumn(() => ({
-          isVisible: !hidden.has(name),
-        })),
-      ],
     }));
   }
 
-  /** Visible columns, as filtered by the ColumnVisibility plugin. */
-  @cached
+  /** Visible columns, supplied by the ColumnVisibility plugin. */
   get visibleColumns() {
     return tableColumns.for(this.table);
   }
 
   /**
-   * Every input row, lazily wrapped into the object shape the headless table
-   * expects. Each source-row array maps to a single, stable Row instance —
-   * downstream filtering, pinning, and the headless table's own Row<>
-   * wrappers can all reuse the same reference instead of re-allocating on
-   * every render.
+   * Every input row, lazily wrapped into the object shape the headless
+   * table expects. Each source-row array maps to a single, stable Row
+   * instance — the headless table's own Row<> wrappers can reuse the
+   * same reference instead of re-allocating on every render.
    */
   allRows = map(this, {
     data: () => this.args.rows,
@@ -117,81 +127,24 @@ export class DynamicTable extends Component<{
     },
   });
 
-  /** source-row → index lookup so filter results can map back to allRows. */
-  @cached
-  get sourceIndex(): Map<string[], number> {
-    const out = new Map<string[], number>();
-    const arr = this.args.rows;
-    for (let i = 0; i < arr.length; i++) {
-      out.set(arr[i] as string[], i);
-    }
-    return out;
-  }
-
   @cached
   get pinnedSet(): Set<string> {
     return new Set(this.qp.pinnedRows);
   }
 
-  @cached
-  get pinnedRows(): Row[] {
-    const set = this.pinnedSet;
-    if (set.size === 0) return [];
-    return this.allRows.values().filter((r) => set.has(r[HASH_KEY]));
-  }
-
   /**
-   * Filter applies to the un-pinned rows; pinned ones bypass it entirely.
-   * Resolves each filtered source row to its cached Row from `allRows` so
-   * downstream consumers see the same identity across renders.
+   * The full set of rows handed to the headless table. We do not slice
+   * the array down by the active filter — non-matching rows are hidden
+   * with `display: none` from the template instead, which keeps Row
+   * identities (and the plugin's Row<> wrappers) stable as the user
+   * filters and unfilters.
    */
-  @cached
-  get unpinnedFiltered(): Row[] {
-    const set = this.pinnedSet;
-    const idx = this.sourceIndex;
-    const result: Row[] = [];
-    for (const src of this.filter.data) {
-      const i = idx.get(src);
-      if (i === undefined) continue;
-      const row = this.allRows[i];
-      if (!row || set.has(row[HASH_KEY])) continue;
-      result.push(row);
-    }
-    return result;
-  }
-
   @cached
   get tableData(): Row[] {
     const sorts = this.sorts;
-    const unpinned = this.unpinnedFiltered;
-
-    const sorted =
-      sorts.length === 0
-        ? unpinned
-        : [...unpinned].sort((a, b) => {
-            for (const { property, direction } of sorts) {
-              const av = a[property] ?? '';
-              const bv = b[property] ?? '';
-              const af = parseFloat(av);
-              const bf = parseFloat(bv);
-
-              let result: number;
-              if (!isNaN(af) && !isNaN(bf)) {
-                result = af - bf;
-              } else {
-                result = av.localeCompare(bv);
-              }
-
-              if (result !== 0) {
-                return direction === SortDirection.Descending
-                  ? -result
-                  : result;
-              }
-            }
-            return 0;
-          });
-
-    return [...this.pinnedRows, ...sorted];
+    const rows = this.allRows.values();
+    if (sorts.length === 0) return rows;
+    return [...rows].sort(compareRows(sorts));
   }
 
   @cached
@@ -250,13 +203,26 @@ export class DynamicTable extends Component<{
     return interpolation;
   }
 
-  hasEnoughToSort = () => this.tableData.length > 1;
+  // The "no results" row spans pin column + every visible column.
   get colspanWithPin() {
     return this.visibleColumns.length + 1;
   }
+
+  hasEnoughToSort = () => this.tableData.length > 1;
   cellIndex = (key: string) => indexFromKey(key);
   cellValue = (row: Row, key: string) => row[key] ?? '';
   headerForKey = (key: string) => this.headers[indexFromKey(key)] ?? '';
+
+  /**
+   * Per-row visibility check used as a CSS class hint. Pinning bypasses
+   * the filter so a pinned row stays visible even if an aggressive
+   * filter would otherwise hide it.
+   */
+  rowMatchesFilter = (row: Row): boolean => {
+    const headers = this.headers;
+    const source = headers.map((_, i) => row[colKey(i)] ?? '');
+    return this.filter.matchesRow(source);
+  };
 
   // Local references so they can be used as helpers in <template>.
   sortAsc = sortAscending;
@@ -273,14 +239,15 @@ export class DynamicTable extends Component<{
         class="link-btn clear-filters"
         {{on "click" this.filter.clear}}
       >Clear filters</button>
-      <Settings
-        @columns={{this.columns}}
-        @numericFlags={{this.numericColumnFlags}}
-      />
+      <Settings @table={{this.table}} @numericFlags={{this.numericColumnFlags}} />
     </div>
 
     <Form @onChange={{this.filter.handleChange}}>
-      <div class="table-scroll" {{this.table.modifiers.container}}>
+      <div
+        class="table-scroll"
+        {{this.table.modifiers.container}}
+        {{stickyOffset}}
+      >
         <table>
           <thead>
             <tr>
@@ -320,7 +287,10 @@ export class DynamicTable extends Component<{
           </thead>
           <tbody>
             {{#each this.table.rows as |row|}}
-              <tr class="{{if (this.isPinned row) 'is-pinned'}}">
+              <tr
+                class="{{if (this.isPinned row) 'is-pinned'}}
+                  {{unless (this.rowMatchesFilter row.data) 'is-filtered-out'}}"
+              >
                 <td class="pin-col">
                   <button
                     type="button"

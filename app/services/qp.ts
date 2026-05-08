@@ -10,7 +10,6 @@ export type ColorValidation = [
 
 interface QPs {
   cv: ColorValidation[];
-  hidden: string[];
   pinned: string[];
 }
 
@@ -32,8 +31,10 @@ export default class QPService extends Service {
     return this.router.currentRoute?.queryParams ?? {};
   }
 
+  // -- Color highlighting (no plugin owns this) --
+
   get conditionalValidations(): QPs['cv'] {
-    return tryParse<QPs['cv']>(this.#current.cv, []);
+    return tryParse<QPs['cv']>(this.#current['cv'], []);
   }
 
   set conditionalValidations(value: QPs['cv']) {
@@ -44,38 +45,17 @@ export default class QPService extends Service {
     });
   }
 
-  get hiddenColumns(): QPs['hidden'] {
-    return tryParse<QPs['hidden']>(this.#current.hidden, []);
-  }
-
-  set hiddenColumns(value: QPs['hidden']) {
-    this.router.transitionTo({
-      queryParams: {
-        hidden: value.length === 0 ? null : JSON.stringify(value),
-      },
-    });
-  }
-
   setColorRange(column: string, low: string | null, high: string | null) {
     const next = this.conditionalValidations.filter((v) => v[0] !== column);
     if (low && high) next.push([column, low, high]);
     this.conditionalValidations = next;
   }
 
-  toggleColumn(column: string, visible: boolean) {
-    const current = new Set(this.hiddenColumns);
-    if (visible) current.delete(column);
-    else current.add(column);
-    this.hiddenColumns = [...current];
-  }
-
-  isHidden(column: string): boolean {
-    return this.hiddenColumns.includes(column);
-  }
-
   colorRangeFor(column: string): ColorValidation | undefined {
     return this.conditionalValidations.find((v) => v[0] === column);
   }
+
+  // -- Pinned rows (RowSelection plugin doesn't expose preferences) --
 
   get pinnedRows(): QPs['pinned'] {
     return tryParse<QPs['pinned']>(this.#current['pinned'], []);

@@ -406,12 +406,40 @@ p.small {
   }
 }
 
-tr.is-pinned {
-  background: var(--accent-soft) !important;
+/*
+ * Pinned rows aren't repositioned in the data, they're CSS-sticky to the
+ * top of `.table-scroll` so they stay visible while the user scrolls.
+ * `--head-offset` is set live by the `stickyOffset` modifier in
+ * dynamic-table.gts so the row sits just under the (also sticky) thead
+ * regardless of how tall the head ends up.
+ *
+ * Sticky needs to live on the cells, not the <tr>, because <tr> isn't a
+ * box the browser can stack-position reliably across engines.
+ */
+tr.is-pinned td {
+  position: sticky;
+  top: var(--head-offset, 0);
+  /*
+   * Sticky cells layer over the rows that scroll past them, so they
+   * need an opaque background. `color-mix` with `--bg` keeps the
+   * accent tint while staying readable.
+   */
+  background: color-mix(in srgb, var(--accent) 15%, var(--bg));
+  z-index: 1;
+}
 
-  & + tr:not(.is-pinned) {
-    border-top: 2px solid var(--accent);
-  }
+tr.is-pinned td:first-child {
+  box-shadow: inset 4px 0 0 var(--accent);
+}
+
+/*
+ * Filter is applied via this class rather than by slicing the data
+ * array — keeps Row identities stable and avoids a churning array on
+ * every keystroke. Pinned rows always show, even when they wouldn't
+ * pass the filter on their own.
+ */
+tr.is-filtered-out:not(.is-pinned) {
+  display: none;
 }
 
 /* ---------- Inline filters ---------- */
@@ -504,7 +532,14 @@ tr.is-pinned {
 
 .table-scroll {
   width: 100%;
-  overflow-x: auto;
+  /*
+   * Owns its own scroll axes so `position: sticky` on thead and on
+   * pinned rows resolve against this container. Capped to viewport
+   * height (minus the sticky page header) so the surrounding toolbar
+   * and "viewing X" line stay above the scroll surface.
+   */
+  overflow: auto;
+  max-height: calc(100vh - 6rem);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--bg);
@@ -522,7 +557,7 @@ table {
     background: var(--control-bg);
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 2;
   }
 
   th {

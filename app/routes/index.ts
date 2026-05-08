@@ -24,7 +24,7 @@ export default class IndexRoute extends Route {
     key: { refreshModel: true },
     // post-fetch customizations
     cv: { /* custom validations */ refreshModel: false },
-    hidden: { refreshModel: false },
+    prefs: { /* @universal-ember/table preferences blob */ refreshModel: false },
     pinned: { refreshModel: false },
     // Not implemented yet, but should be
     sort: { refreshModel: false },

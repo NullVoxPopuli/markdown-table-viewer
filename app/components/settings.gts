@@ -5,12 +5,16 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { Popover } from 'ember-primitives/components/popover';
 
-import type QPService from '#services/qp.ts';
+import { meta } from '@universal-ember/table/plugins';
+import {
+  ColumnVisibility,
+  isVisible,
+  isHidden,
+} from '@universal-ember/table/plugins/column-visibility';
+import type { Column, Table } from '@universal-ember/table';
 
-interface ColumnConfig {
-  name: string;
-  key: string;
-}
+import { indexFromKey } from '#utils/column-keys.ts';
+import type QPService from '#services/qp.ts';
 
 const DEFAULT_LOW = '#ff5252';
 const DEFAULT_HIGH = '#5cd472';
@@ -21,15 +25,9 @@ function inputValue(event: Event): string {
   return '';
 }
 
-function isInputChecked(event: Event): boolean {
-  const t = event.target;
-  if (t instanceof HTMLInputElement) return t.checked;
-  return false;
-}
-
-export class Settings extends Component<{
+export class Settings<T> extends Component<{
   Args: {
-    columns: ColumnConfig[];
+    table: Table<T>;
     numericFlags: boolean[];
   };
 }> {
@@ -39,49 +37,63 @@ export class Settings extends Component<{
 
   toggleOpen = () => (this.open = !this.open);
 
-  isVisible = (header: string) => !this.qp.isHidden(header);
+  /** Every configured column, including ones the visibility plugin is hiding. */
+  get allColumns(): Column<T>[] {
+    return this.args.table.columns.values();
+  }
 
-  isHighlighted = (header: string) =>
-    this.qp.colorRangeFor(header) !== undefined;
+  isVisible = (column: Column<T>) => isVisible(column);
 
-  lowColorOf = (header: string) =>
-    this.qp.colorRangeFor(header)?.[1] ?? DEFAULT_LOW;
-
-  highColorOf = (header: string) =>
-    this.qp.colorRangeFor(header)?.[2] ?? DEFAULT_HIGH;
-
-  toggleVisibility = (header: string, event: Event) => {
-    this.qp.toggleColumn(header, isInputChecked(event));
+  toggleVisibility = (column: Column<T>) => {
+    meta.forColumn(column, ColumnVisibility).toggle();
   };
 
-  toggleHighlight = (header: string, event: Event) => {
-    if (isInputChecked(event)) {
+  showAll = () => {
+    for (const column of this.allColumns) {
+      if (isHidden(column)) {
+        meta.forColumn(column, ColumnVisibility).show();
+      }
+    }
+  };
+
+  // Color highlighting still lives in the QP service: no plugin owns it.
+  isHighlighted = (header: string | undefined) =>
+    !!header && this.qp.colorRangeFor(header) !== undefined;
+
+  lowColorOf = (header: string | undefined) =>
+    (header && this.qp.colorRangeFor(header)?.[1]) ?? DEFAULT_LOW;
+
+  highColorOf = (header: string | undefined) =>
+    (header && this.qp.colorRangeFor(header)?.[2]) ?? DEFAULT_HIGH;
+
+  toggleHighlight = (header: string | undefined, event: Event) => {
+    if (!header) return;
+    const target = event.target as HTMLInputElement;
+    if (target.checked) {
       this.qp.setColorRange(header, DEFAULT_LOW, DEFAULT_HIGH);
     } else {
       this.qp.setColorRange(header, null, null);
     }
   };
 
-  setLow = (header: string, event: Event) => {
+  setLow = (header: string | undefined, event: Event) => {
+    if (!header) return;
     const high = this.qp.colorRangeFor(header)?.[2] ?? DEFAULT_HIGH;
     this.qp.setColorRange(header, inputValue(event), high);
   };
 
-  setHigh = (header: string, event: Event) => {
+  setHigh = (header: string | undefined, event: Event) => {
+    if (!header) return;
     const low = this.qp.colorRangeFor(header)?.[1] ?? DEFAULT_LOW;
     this.qp.setColorRange(header, low, inputValue(event));
-  };
-
-  showAll = () => {
-    this.qp.hiddenColumns = [];
   };
 
   clearHighlights = () => {
     this.qp.conditionalValidations = [];
   };
 
-  isNumeric = (key: string) => {
-    const idx = parseInt(key.replace(/^col/, ''), 10);
+  isNumeric = (column: Column<T>) => {
+    const idx = indexFromKey(column.key);
     return this.args.numericFlags[idx] ?? false;
   };
 
@@ -125,18 +137,18 @@ export class Settings extends Component<{
           </div>
 
           <ul class="settings-columns">
-            {{#each @columns as |col|}}
+            {{#each this.allColumns as |col|}}
               <li class="settings-row">
                 <label class="visibility">
                   <input
                     type="checkbox"
-                    checked={{this.isVisible col.name}}
-                    {{on "change" (fn this.toggleVisibility col.name)}}
+                    checked={{this.isVisible col}}
+                    {{on "change" (fn this.toggleVisibility col)}}
                   />
                   <span class="col-name">{{col.name}}</span>
                 </label>
 
-                {{#if (this.isNumeric col.key)}}
+                {{#if (this.isNumeric col)}}
                   <div class="highlight-controls">
                     <label class="highlight-toggle">
                       <input

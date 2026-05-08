@@ -51,33 +51,45 @@ export class Filter {
     return this.#headerFn();
   }
 
-  @cached
+  /**
+   * The full source data, exposed for callers that want to derive
+   * dropdown options or do their own per-row matching with
+   * {@link Filter.matchesRow}. Filtering itself is intentionally _not_
+   * applied here — the consumer hides non-matching rows in the DOM
+   * instead of rebuilding the row array on every filter change.
+   */
   get data() {
-    const rows = this.incomingData;
-    const headers = this.headers;
+    return this.incomingData;
+  }
+
+  /**
+   * Does `row` (a source row from `data`) pass the active filters?
+   *
+   * Each form field is keyed either by column name (multi-select
+   * picker) or `<column>-search` (free-text search). An empty value
+   * means "no constraint on that column".
+   */
+  matchesRow(row: string[]): boolean {
     const filters = this.filters;
+    if (!filters) return true;
+    const headers = this.headers;
 
-    if (!filters) {
-      return rows;
+    for (const [filterName, value] of Object.entries(filters)) {
+      if (value.length === 0) continue;
+
+      if (filterName.endsWith('-search')) {
+        if (Array.isArray(value)) continue; // not allowed
+        const headerName = filterName.replace(/-search$/, '');
+        const hIndex = headers.indexOf(headerName);
+        if (!row[hIndex]?.includes(value)) return false;
+        continue;
+      }
+
+      if (!Array.isArray(value)) continue; // not allowed
+      const hIndex = headers.indexOf(filterName);
+      if (!value.some((v) => row[hIndex]?.includes(v))) return false;
     }
-
-    return rows.filter((row) => {
-      return Object.entries(filters).every(([filterName, filters]) => {
-        if (filters.length === 0) return true;
-
-        if (filterName.endsWith('-search')) {
-          if (Array.isArray(filters)) return true; // not allowed
-          const headerName = filterName.replace(/-search$/, '');
-          const hIndex = headers.indexOf(headerName);
-          return row[hIndex]?.includes(filters);
-        }
-
-        if (!Array.isArray(filters)) return true; // not allowed
-
-        const hIndex = headers.indexOf(filterName);
-        return filters.some((filter) => row[hIndex]?.includes(filter));
-      });
-    });
+    return true;
   }
 }
 

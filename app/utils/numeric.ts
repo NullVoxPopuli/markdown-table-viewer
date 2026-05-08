@@ -1,6 +1,7 @@
 /**
- * Numeric helpers used by DynamicTable to decide which columns can be
- * sorted numerically and which can opt into color highlighting.
+ * Numeric helpers used by DynamicTable. The same column may be both
+ * sorted numerically and color-highlighted; these helpers just provide
+ * the underlying detection and range computation.
  */
 
 /** How many non-empty rows we sample before deciding numeric-ness. */
