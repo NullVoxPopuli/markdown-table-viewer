@@ -74,18 +74,9 @@
     "./tests/*": "./tests/*",
     "./*": "./app/*"
   },
-  "pnpm": {
-    "overrides": {
-      "@glimmer/validator": ">= 0.92.0"
-    },
-    "peerDependencyRules": {
-      "ignoreMissing": [
-        "webpack"
-      ]
-    }
-  },
   "dependencies": {
     "@ember/app-tsconfig": "^2.0.0",
+    "@ember/test-waiters": "^4.1.1",
     "culori": "^4.0.2",
     "ember-primitives": "^0.57.0",
     "marked": "^18.0.3",

@@ -1,7 +1,7 @@
 lockfileVersion: '9.0'
 
 settings:
-  autoInstallPeers: true
+  autoInstallPeers: false
   excludeLinksFromLockfile: false
 
 importers:
@@ -11,6 +11,9 @@ importers:
       '@ember/app-tsconfig':
         specifier: ^2.0.0
         version: 2.0.0
+      '@ember/test-waiters':
+        specifier: ^4.1.1
+        version: 4.1.1(@babel/core@7.29.0)(@glint/template@1.7.7)
       culori:
         specifier: ^4.0.2
         version: 4.0.2
