@@ -7,7 +7,16 @@ function isDark() {
 }
 
 function toggle() {
-  colorScheme.update(colorScheme.isDark ? 'light' : 'dark');
+  const next = colorScheme.isDark ? 'light' : 'dark';
+  // View Transitions API: snapshot current paint, flip the theme,
+  // snapshot the new paint, then cross-fade the two as a single
+  // page-level animation. Falls back to an instant swap on browsers
+  // that don't support the API (currently Firefox without the flag).
+  if (typeof document.startViewTransition === 'function') {
+    document.startViewTransition(() => colorScheme.update(next));
+  } else {
+    colorScheme.update(next);
+  }
 }
 
 export const Header = <template>

@@ -44,6 +44,28 @@
   box-sizing: border-box;
 }
 
+/*
+ * View Transitions API: when the theme toggle wraps the
+ * `colorScheme.update()` call in `document.startViewTransition`, the
+ * browser captures the page before and after the change and animates
+ * between the two as a single cross-fade — instead of every variable-
+ * driven element animating its own colors independently. The `::view-
+ * transition-*` pseudo-elements only exist while a transition is in
+ * flight, so this rule is a no-op the rest of the time.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.3s;
+  animation-timing-function: ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.01ms;
+  }
+}
+
 body {
   margin: 0;
   background: var(--bg);
