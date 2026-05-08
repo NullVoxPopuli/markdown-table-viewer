@@ -1,5 +1,4 @@
 import Component from '@glimmer/component';
-import { guidFor } from '@ember/object/internals';
 import { on } from '@ember/modifier';
 import { cached, tracked } from '@glimmer/tracking';
 
@@ -88,8 +87,6 @@ export class Filters extends Component<{
     filter: Filter;
   };
 }> {
-  id = guidFor(this);
-
   get options() {
     const { column, filter } = this.args;
     return new Set(
@@ -116,7 +113,8 @@ export class Filters extends Component<{
     const wrapper = button.closest('.dynamic-filter');
     if (!wrapper) return;
 
-    const search = wrapper.querySelector<HTMLInputElement>('input[type="text"]');
+    const search =
+      wrapper.querySelector<HTMLInputElement>('input[type="text"]');
     if (search) search.value = '';
 
     const select = wrapper.querySelector<HTMLSelectElement>('select');
@@ -149,7 +147,6 @@ export class Filters extends Component<{
       </span>
       {{#if this.hasOptions}}
         <select
-          id={{this.id}}
           multiple
           aria-label="Filter {{@column}}"
           name={{@column}}

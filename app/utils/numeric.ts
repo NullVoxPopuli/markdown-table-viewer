@@ -32,12 +32,7 @@ if (import.meta.vitest) {
 
   describe('numericRange', () => {
     it('returns min/max', () => {
-      const rows = [
-        { x: '5' },
-        { x: '1' },
-        { x: '9' },
-        { x: 'not a number' },
-      ];
+      const rows = [{ x: '5' }, { x: '1' }, { x: '9' }, { x: 'not a number' }];
       expect(numericRange(rows, 'x')).toEqual({ min: 1, max: 9 });
     });
 

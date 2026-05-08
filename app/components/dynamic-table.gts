@@ -118,7 +118,6 @@ export class DynamicTable extends Component<{
     return this.args.headers.map((name) => ({ name, key: name }));
   }
 
-  /** Visible columns, supplied by the ColumnVisibility plugin. */
   get visibleColumns() {
     return tableColumns.for(this.table);
   }
@@ -136,7 +135,6 @@ export class DynamicTable extends Component<{
     return [...rows].sort(compareRows(sorts));
   }
 
-  // The "no results" row spans pin column + every visible column.
   get colspanWithPin() {
     return this.visibleColumns.length + 1;
   }
@@ -221,7 +219,10 @@ export class DynamicTable extends Component<{
                     {{! NOTE: not sanitized, because no user data is captured on this site.
                               Also, github sanitizes on save }}
                     <td
-                      style="background: {{colorFor column (get row.data column.key)}}"
+                      style="background: {{colorFor
+                        column
+                        (get row.data column.key)
+                      }}"
                     >{{{convertMarkdown (get row.data column.key)}}}</td>
                   {{/each}}
                 </tr>
@@ -251,7 +252,10 @@ export class DynamicTable extends Component<{
                     {{! NOTE: not sanitized, because no user data is captured on this site.
                               Also, github sanitizes on save }}
                     <td
-                      style="background: {{colorFor column (get row.data column.key)}}"
+                      style="background: {{colorFor
+                        column
+                        (get row.data column.key)
+                      }}"
                     >{{{convertMarkdown (get row.data column.key)}}}</td>
                   {{/each}}
                 </tr>

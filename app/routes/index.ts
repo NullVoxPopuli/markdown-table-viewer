@@ -24,7 +24,9 @@ export default class IndexRoute extends Route {
     key: { refreshModel: true },
     // post-fetch customizations
     cv: { /* custom validations */ refreshModel: false },
-    prefs: { /* @universal-ember/table preferences blob */ refreshModel: false },
+    prefs: {
+      /* @universal-ember/table preferences blob */ refreshModel: false,
+    },
     pinned: { refreshModel: false },
     // Not implemented yet, but should be
     sort: { refreshModel: false },
@@ -117,7 +119,10 @@ function findTable(text: string, key: string | undefined) {
   // only cells (`|    |`) keep their column position as `""` rather than
   // collapsing the row.
   const splitCells = (line: string): string[] =>
-    line.split('|').slice(1, -1).map((c) => c.trim());
+    line
+      .split('|')
+      .slice(1, -1)
+      .map((c) => c.trim());
 
   const headers = splitCells(heading);
   const rows = rowData.map(splitCells);

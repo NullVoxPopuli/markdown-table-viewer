@@ -18,7 +18,10 @@
   --control-bg: light-dark(#f5f5f7, #1f1f22);
 
   --accent: light-dark(#6464ff, #8a8aff);
-  --accent-soft: light-dark(rgba(100, 100, 255, 0.15), rgba(138, 138, 255, 0.18));
+  --accent-soft: light-dark(
+    rgba(100, 100, 255, 0.15),
+    rgba(138, 138, 255, 0.18)
+  );
 
   --shadow-sm: light-dark(
     0 1px 2px rgba(0, 0, 0, 0.05),
@@ -159,10 +162,16 @@ header {
 }
 
 main {
+  /*
+   * Table content can be far wider than typical text — let it claim
+   * the full viewport width. The table-scroll container's
+   * `overflow: auto` (set below) keeps narrow viewports usable by
+   * scrolling horizontally instead of forcing a horizontal scroll on
+   * the document.
+   */
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   width: 100%;
-  max-width: 1100px;
   padding: 0 1.25rem 2rem;
   gap: 1rem;
   min-width: 0;

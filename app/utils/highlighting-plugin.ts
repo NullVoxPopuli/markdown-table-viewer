@@ -25,8 +25,9 @@ type OklchInterpolator = (t: number) => Oklch;
  * a pref, etc.) and keeps this plugin generic.
  */
 
-export interface Signature<T extends Record<string, string> = Record<string, string>>
-  extends PluginSignature {
+export interface Signature<
+  T extends Record<string, string> = Record<string, string>,
+> extends PluginSignature {
   Meta: { Column: ColumnMeta<T> };
   Options: {
     Plugin: {
