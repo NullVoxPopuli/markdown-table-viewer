@@ -4,13 +4,13 @@ import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { service } from '@ember/service';
 import { Filter, FilterForm } from './filters.gts';
+import { Settings } from './settings.gts';
 import { link } from 'reactiveweb/link';
 import { parseInline } from 'marked';
 import { interpolate, type Oklch } from 'culori';
 
-type OklchInterpolator = (t: number) => Oklch;
-
 import { headlessTable } from '@universal-ember/table';
+import { columns as tableColumns } from '@universal-ember/table/plugins';
 import {
   DataSorting,
   isAscending,
@@ -19,11 +19,16 @@ import {
   sortAscending,
   sortDescending,
 } from '@universal-ember/table/plugins/data-sorting';
+import {
+  ColumnVisibility,
+  isHidden,
+} from '@universal-ember/table/plugins/column-visibility';
 
 import type { SortItem } from '@universal-ember/table/plugins/data-sorting';
 import type QPService from '#services/qp.ts';
 
 type Row = Record<string, string>;
+type OklchInterpolator = (t: number) => Oklch;
 
 const COL_KEY_PREFIX = 'col';
 const colKey = (index: number) => `${COL_KEY_PREFIX}${index}`;
@@ -32,6 +37,19 @@ const indexFromKey = (key: string) =>
 
 function convertMarkdown(str: string): string {
   return parseInline(str ?? '', { gfm: true }) as string;
+}
+
+function isNumericColumn(rows: string[][], hIndex: number): boolean {
+  let numeric = 0;
+  let total = 0;
+  for (const row of rows) {
+    const v = row[hIndex];
+    if (!v || !v.trim()) continue;
+    total++;
+    if (!isNaN(parseFloat(v))) numeric++;
+    if (total >= 25) break;
+  }
+  return total > 0 && numeric / total >= 0.6;
 }
 
 export class DynamicTable extends Component<{
@@ -45,6 +63,7 @@ export class DynamicTable extends Component<{
   @link filter = new Filter({
     data: () => this.args.rows,
     headers: () => this.args.headers,
+    isHidden: (header) => this.qp.isHidden(header),
   });
 
   @tracked sorts: SortItem<Row>[] = [];
@@ -57,15 +76,27 @@ export class DynamicTable extends Component<{
         sorts: this.sorts,
         onSort: (sorts) => (this.sorts = sorts as SortItem<Row>[]),
       })),
+      ColumnVisibility,
     ],
   });
 
   @cached
   get columns() {
+    const hidden = new Set(this.qp.hiddenColumns);
     return this.args.headers.map((name, index) => ({
       name,
       key: colKey(index),
+      pluginOptions: [
+        ColumnVisibility.forColumn(() => ({
+          isVisible: !hidden.has(name),
+        })),
+      ],
     }));
+  }
+
+  @cached
+  get visibleColumns() {
+    return tableColumns.for(this.table).filter((c) => !isHidden(c));
   }
 
   @cached
@@ -109,6 +140,11 @@ export class DynamicTable extends Component<{
     });
   }
 
+  @cached
+  get numericColumnFlags(): boolean[] {
+    return this.args.headers.map((_, i) => isNumericColumn(this.args.rows, i));
+  }
+
   colorFor = (hIndex: number, value: string) => {
     if (!value) return;
     const heading = this.args.headers[hIndex];
@@ -117,9 +153,7 @@ export class DynamicTable extends Component<{
 
     if (isNaN(num)) return;
 
-    const validation = this.qp.conditionalValidations?.find(
-      (v) => v[0] === heading
-    );
+    const validation = this.qp.colorRangeFor(heading);
     if (!validation) return;
 
     const interpolation = this.getInterpolation(
@@ -130,6 +164,7 @@ export class DynamicTable extends Component<{
 
     const max = this.maxOf(hIndex);
     const min = this.minOf(hIndex);
+    if (max === min) return;
     const normalized = (num - min) / (max - min);
     const color = interpolation(normalized);
 
@@ -157,23 +192,29 @@ export class DynamicTable extends Component<{
     return min;
   };
 
-  #interpolationCache: Record<number, OklchInterpolator> = {};
+  #interpolationCache: Record<string, OklchInterpolator> = {};
   getInterpolation(
     hIndex: number,
     end: string,
     start: string
   ): OklchInterpolator {
-    const cached = this.#interpolationCache[hIndex];
+    const cacheKey = `${hIndex}|${end}|${start}`;
+    const cached = this.#interpolationCache[cacheKey];
     if (cached) return cached;
 
-    const interpolation = interpolate([end, start], 'oklch') as OklchInterpolator;
-    this.#interpolationCache[hIndex] = interpolation;
+    const interpolation = interpolate(
+      [end, start],
+      'oklch'
+    ) as OklchInterpolator;
+    this.#interpolationCache[cacheKey] = interpolation;
     return interpolation;
   }
 
   hasEnoughToSort = () => this.tableData.length > 1;
   cellIndex = (key: string) => indexFromKey(key);
   cellValue = (row: Row, key: string) => row[key] ?? '';
+  isNumericKey = (key: string) =>
+    this.numericColumnFlags[indexFromKey(key)] ?? false;
 
   // Local references so they can be used as helpers in <template>
   sortAsc = sortAscending;
@@ -182,13 +223,20 @@ export class DynamicTable extends Component<{
   isDesc = isDescending;
 
   <template>
+    <div class="toolbar">
+      <Settings
+        @columns={{this.columns}}
+        @numericFlags={{this.numericColumnFlags}}
+      />
+    </div>
+
     <FilterForm @filters={{this.filter}} />
 
     <div class="table-scroll" {{this.table.modifiers.container}}>
       <table>
         <thead>
           <tr>
-            {{#each this.table.columns as |column|}}
+            {{#each this.visibleColumns as |column|}}
               <th {{this.table.modifiers.columnHeader column}}>
                 <div class="heading">
                   <span class="name">{{column.name}}</span>
@@ -218,7 +266,7 @@ export class DynamicTable extends Component<{
         <tbody>
           {{#each this.table.rows as |row|}}
             <tr>
-              {{#each this.table.columns as |column|}}
+              {{#each this.visibleColumns as |column|}}
                 {{! NOTE: not sanitized, because no user data is captured on this site.
                           Also, github sanitizes on save }}
                 <td
@@ -231,7 +279,8 @@ export class DynamicTable extends Component<{
             </tr>
           {{else}}
             <tr>
-              <td colspan={{@headers.length}} class="no-results">No results</td>
+              <td colspan={{this.visibleColumns.length}} class="no-results">No
+                results</td>
             </tr>
           {{/each}}
         </tbody>
