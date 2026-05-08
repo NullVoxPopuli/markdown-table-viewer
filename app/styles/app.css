@@ -1,80 +1,40 @@
 :root {
-  --light-bg: #fff;
-  --light-fg: #1a1a1a;
-  --light-muted: #6a6a6a;
-  --light-border: #e2e2e6;
-  --light-row-alt: #fafafa;
-  --light-row-hover: #f1f4ff;
-  --light-control-bg: #f5f5f7;
+  /*
+   * Theme variables resolve via the CSS `light-dark()` function, which
+   * picks the value matching the active `color-scheme`. ember-primitives'
+   * `colorScheme.update()` (and its `sync()` boot hook) writes
+   * `color-scheme: dark` or `color-scheme: light` onto <html>, so changing
+   * the theme just retargets `light-dark()` — no JS-driven CSS attribute
+   * needed.
+   */
+  color-scheme: light dark;
 
-  --dark-bg: #151515;
-  --dark-fg: #efefef;
-  --dark-muted: #9a9a9a;
-  --dark-border: #2a2a2e;
-  --dark-row-alt: #1b1b1d;
-  --dark-row-hover: #232331;
-  --dark-control-bg: #1f1f22;
+  --bg: light-dark(#fff, #151515);
+  --fg: light-dark(#1a1a1a, #efefef);
+  --muted: light-dark(#6a6a6a, #9a9a9a);
+  --border: light-dark(#e2e2e6, #2a2a2e);
+  --row-alt: light-dark(#fafafa, #1b1b1d);
+  --row-hover: light-dark(#f1f4ff, #232331);
+  --control-bg: light-dark(#f5f5f7, #1f1f22);
 
-  --accent: #6464ff;
-  --accent-soft: rgba(100, 100, 255, 0.15);
+  --accent: light-dark(#6464ff, #8a8aff);
+  --accent-soft: light-dark(rgba(100, 100, 255, 0.15), rgba(138, 138, 255, 0.18));
 
-  --bg: var(--light-bg);
-  --fg: var(--light-fg);
-  --muted: var(--light-muted);
-  --border: var(--light-border);
-  --row-alt: var(--light-row-alt);
-  --row-hover: var(--light-row-hover);
-  --control-bg: var(--light-control-bg);
+  --shadow-sm: light-dark(
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.4)
+  );
+  --shadow-md: light-dark(
+    0 6px 18px rgba(0, 0, 0, 0.08),
+    0 6px 18px rgba(0, 0, 0, 0.5)
+  );
 
   --radius: 8px;
   --radius-sm: 4px;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.08);
 
   --font-stack:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
     Arial, sans-serif;
-}
-
-:root[data-theme='dark'] {
-  --bg: var(--dark-bg);
-  --fg: var(--dark-fg);
-  --muted: var(--dark-muted);
-  --border: var(--dark-border);
-  --row-alt: var(--dark-row-alt);
-  --row-hover: var(--dark-row-hover);
-  --control-bg: var(--dark-control-bg);
-
-  --accent: #8a8aff;
-  --accent-soft: rgba(138, 138, 255, 0.18);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.5);
-
-  color-scheme: dark;
-}
-
-:root[data-theme='light'] {
-  color-scheme: light;
-}
-
-/* No data-theme attribute: fall back to OS preference. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    --bg: var(--dark-bg);
-    --fg: var(--dark-fg);
-    --muted: var(--dark-muted);
-    --border: var(--dark-border);
-    --row-alt: var(--dark-row-alt);
-    --row-hover: var(--dark-row-hover);
-    --control-bg: var(--dark-control-bg);
-
-    --accent: #8a8aff;
-    --accent-soft: rgba(138, 138, 255, 0.18);
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.5);
-
-    color-scheme: dark;
-  }
 }
 
 * {

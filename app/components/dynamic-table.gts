@@ -56,7 +56,6 @@ export class DynamicTable extends Component<{
   @link filter = new Filter({
     data: () => this.args.rows,
     headers: () => this.headers,
-    isHidden: (header) => this.qp.isHidden(header),
   });
 
   @tracked sorts: SortItem<Row>[] = [];

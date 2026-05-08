@@ -36,16 +36,10 @@ export class Filter {
 
   #dataFn: () => string[][];
   #headerFn: () => string[];
-  #isHiddenFn: (header: string) => boolean;
 
-  constructor(options: {
-    data: () => string[][];
-    headers: () => string[];
-    isHidden?: (header: string) => boolean;
-  }) {
+  constructor(options: { data: () => string[][]; headers: () => string[] }) {
     this.#dataFn = options.data;
     this.#headerFn = options.headers;
-    this.#isHiddenFn = options.isHidden ?? (() => false);
   }
 
   @cached
@@ -55,12 +49,6 @@ export class Filter {
 
   get headers() {
     return this.#headerFn();
-  }
-
-  isHidden = (header: string) => this.#isHiddenFn(header);
-
-  get visibleHeaders() {
-    return this.headers.filter((h) => !this.#isHiddenFn(h));
   }
 
   @cached
@@ -77,15 +65,9 @@ export class Filter {
       return Object.entries(filters).every(([filterName, filters]) => {
         if (filters.length === 0) return true;
 
-        const headerName = filterName.endsWith('-search')
-          ? filterName.replace(/-search$/, '')
-          : filterName;
-
-        // Hidden columns' filters are silently ignored.
-        if (this.#isHiddenFn(headerName)) return true;
-
         if (filterName.endsWith('-search')) {
           if (Array.isArray(filters)) return true; // not allowed
+          const headerName = filterName.replace(/-search$/, '');
           const hIndex = headers.indexOf(headerName);
           return row[hIndex]?.includes(filters);
         }
