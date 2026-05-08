@@ -7,6 +7,7 @@ import { Filter, Filters } from './filters.gts';
 import { Form } from 'ember-primitives/components/form';
 import { Settings } from './settings.gts';
 import { link } from 'reactiveweb/link';
+import { map } from 'reactiveweb/map';
 import { interpolate, type Oklch } from 'culori';
 
 import { headlessTable } from '@universal-ember/table';
@@ -99,20 +100,33 @@ export class DynamicTable extends Component<{
   }
 
   /**
-   * Every input row, hashed and converted to the object shape the headless
-   * table expects. Index into the original array is kept (`__index`) so we
-   * can drive deterministic ordering when needed.
+   * Every input row, lazily wrapped into the object shape the headless table
+   * expects. Each source-row array maps to a single, stable Row instance —
+   * downstream filtering, pinning, and the headless table's own Row<>
+   * wrappers can all reuse the same reference instead of re-allocating on
+   * every render.
    */
-  @cached
-  get allRows(): Row[] {
-    const headers = this.headers;
-    return this.args.rows.map((row) => {
+  allRows = map(this, {
+    data: () => this.args.rows,
+    map: (row: string[]): Row => {
       const obj = { [HASH_KEY]: rowHash(row) } as Row;
+      const headers = this.headers;
       for (let i = 0; i < headers.length; i++) {
         obj[colKey(i)] = row[i] ?? '';
       }
       return obj;
-    });
+    },
+  });
+
+  /** source-row → index lookup so filter results can map back to allRows. */
+  @cached
+  get sourceIndex(): Map<string[], number> {
+    const out = new Map<string[], number>();
+    const arr = this.args.rows;
+    for (let i = 0; i < arr.length; i++) {
+      out.set(arr[i] as string[], i);
+    }
+    return out;
   }
 
   @cached
@@ -124,23 +138,27 @@ export class DynamicTable extends Component<{
   get pinnedRows(): Row[] {
     const set = this.pinnedSet;
     if (set.size === 0) return [];
-    return this.allRows.filter((r) => set.has(r[HASH_KEY]));
+    return this.allRows.values().filter((r) => set.has(r[HASH_KEY]));
   }
 
-  /** Filter applies to the un-pinned rows; pinned ones bypass it entirely. */
+  /**
+   * Filter applies to the un-pinned rows; pinned ones bypass it entirely.
+   * Resolves each filtered source row to its cached Row from `allRows` so
+   * downstream consumers see the same identity across renders.
+   */
   @cached
   get unpinnedFiltered(): Row[] {
     const set = this.pinnedSet;
-    const headers = this.headers;
-    return this.filter.data
-      .map((row) => {
-        const obj = { [HASH_KEY]: rowHash(row) } as Row;
-        for (let i = 0; i < headers.length; i++) {
-          obj[colKey(i)] = row[i] ?? '';
-        }
-        return obj;
-      })
-      .filter((r) => !set.has(r[HASH_KEY]));
+    const idx = this.sourceIndex;
+    const result: Row[] = [];
+    for (const src of this.filter.data) {
+      const i = idx.get(src);
+      if (i === undefined) continue;
+      const row = this.allRows[i];
+      if (!row || set.has(row[HASH_KEY])) continue;
+      result.push(row);
+    }
+    return result;
   }
 
   @cached
