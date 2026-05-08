@@ -28,7 +28,7 @@ function toggle() {
 }
 
 export const Header = <template>
-  {{ (syncDataTheme) }}
+  {{(syncDataTheme)}}
   <header>
     <span>
       <LinkTo @route="application" class="home-link">
