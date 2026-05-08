@@ -2,15 +2,9 @@
   "extends": "@ember/app-tsconfig",
   "compilerOptions": {
     "paths": {
-      "table-viewer/tests/*": [
-        "./tests/*"
-      ],
-      "table-viewer/*": [
-        "./app/*"
-      ],
-      "*": [
-        "./types/*"
-      ]
+      "table-viewer/tests/*": ["./tests/*"],
+      "table-viewer/*": ["./app/*"],
+      "*": ["./types/*"]
     },
     "types": [
       "ember-source/types",
@@ -19,5 +13,5 @@
       "vite/client",
       "vitest/importMeta"
     ]
-  },
+  }
 }

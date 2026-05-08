@@ -24,7 +24,6 @@ class Form extends Component {
       const url = `/?file=${raw}&key=${data.key}`;
       this.router.transitionTo(url);
     } catch (e) {
-       
       this.error = e.message;
     }
   };

@@ -55,7 +55,8 @@ select {
       }
     }
 
-    select, input {
+    select,
+    input {
       background: var(--dark-bg);
       color: var(--dark-fg);
     }
@@ -144,7 +145,6 @@ table {
       max-width: 50px;
     }
   }
-
 }
 
 .filters h2 {
@@ -183,8 +183,8 @@ form.load-form {
   }
 
   .url {
-    input  {
-    font-size: 1.25rem;
+    input {
+      font-size: 1.25rem;
       padding: 0.5rem 1rem;
     }
   }
@@ -204,11 +204,11 @@ form.load-form {
     }
   }
 
-  button, input[type='reset'] {
+  button,
+  input[type='reset'] {
     padding: 0.125rem 0.125rem;
     background: none;
     border: none;
     color: var(--current-fg);
   }
-
 }

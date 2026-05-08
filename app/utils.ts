@@ -39,16 +39,15 @@ export function urlToRaw(url: string) {
 
       updatedPath = `${org}/${repo}/refs/heads/${branch}/${pathParts.join('/')}`;
     } else if (parts[0] === 'tree') {
-    /**
-     * Missing the README:
-     *
+      /**
+       * Missing the README:
+       *
        * https://github.com/emberjs/data/tree/main
        *                    ^ org   ^repo
        *                                 ^[0]
        */
-    const [tree, branch, ...pathParts] = parts;
-    updatedPath = `${org}/${repo}/refs/heads/${branch}/${[...pathParts, 'README.md'].join('/')}`;
-
+      const [tree, branch, ...pathParts] = parts;
+      updatedPath = `${org}/${repo}/refs/heads/${branch}/${[...pathParts, 'README.md'].join('/')}`;
     } else {
       updatedPath = pathname.replace('/tree/', '/blob/');
     }
@@ -91,7 +90,6 @@ if (import.meta.vitest) {
   describe('urlToRaw (default)', () => {
     const examples = [
       ['https://github.com/NullVoxPopuli/disk-perf-git-and-pnpm', raw.disk],
-
     ] as const;
 
     for (const variant of github.suffixVariants) {
@@ -115,13 +113,13 @@ if (import.meta.vitest) {
       ],
     ] as const;
 
-        for (const example of examples) {
-          it(example[0], () => {
-            const [input, expected] = example;
-            const result = urlToRaw(input);
-            expect(result.split('/')).toEqual(expected.split('/'));
-          });
-        }
+    for (const example of examples) {
+      it(example[0], () => {
+        const [input, expected] = example;
+        const result = urlToRaw(input);
+        expect(result.split('/')).toEqual(expected.split('/'));
+      });
+    }
   });
 
   describe('unRaw', () => {
