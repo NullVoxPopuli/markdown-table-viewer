@@ -407,29 +407,35 @@ p.small {
 }
 
 /*
- * Pinned rows aren't repositioned in the data, they're CSS-sticky to the
- * top of `.table-scroll` so they stay visible while the user scrolls.
- * `--head-offset` is set live by the `stickyOffset` modifier in
- * dynamic-table.gts so the row sits just under the (also sticky) thead
- * regardless of how tall the head ends up.
- *
- * Sticky needs to live on the cells, not the <tr>, because <tr> isn't a
- * box the browser can stack-position reliably across engines.
+ * Pinned rows live in their own <tbody class="pinned-rows"> so they
+ * naturally stack at the top of the table — multiple pinned rows pile
+ * up in source order without overlapping. The whole tbody sticks below
+ * the (also sticky) thead, with `--head-offset` set live by the
+ * `stickyOffset` modifier in dynamic-table.gts so it positions
+ * correctly even when the head re-flows (variable filter widget
+ * heights, etc.).
  */
-tr.is-pinned td {
+tbody.pinned-rows {
   position: sticky;
   top: var(--head-offset, 0);
+  z-index: 1;
+}
+
+tbody.pinned-rows tr.is-pinned td {
   /*
    * Sticky cells layer over the rows that scroll past them, so they
    * need an opaque background. `color-mix` with `--bg` keeps the
    * accent tint while staying readable.
    */
   background: color-mix(in srgb, var(--accent) 15%, var(--bg));
-  z-index: 1;
 }
 
-tr.is-pinned td:first-child {
+tbody.pinned-rows tr.is-pinned td:first-child {
   box-shadow: inset 4px 0 0 var(--accent);
+}
+
+tbody.pinned-rows tr.is-pinned:last-child td {
+  border-bottom: 2px solid var(--accent);
 }
 
 /*

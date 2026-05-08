@@ -4,6 +4,8 @@
  * the underlying detection and range computation.
  */
 
+type Row = Record<string, string>;
+
 /** How many non-empty rows we sample before deciding numeric-ness. */
 const SAMPLE_SIZE = 25;
 
@@ -11,17 +13,17 @@ const SAMPLE_SIZE = 25;
 const THRESHOLD = 0.6;
 
 /**
- * Heuristic: does the column at `hIndex` look numeric across the data set?
+ * Heuristic: does the column at `key` look numeric across the data set?
  *
  * We deliberately scan only the first `SAMPLE_SIZE` non-empty cells —
  * dynamic tables can be large and we only need a hint for UI affordances.
  */
-export function isNumericColumn(rows: string[][], hIndex: number): boolean {
+export function isNumericColumn(rows: Row[], key: string): boolean {
   let numeric = 0;
   let total = 0;
 
   for (const row of rows) {
-    const v = row[hIndex];
+    const v = row[key];
     if (!v || !v.trim()) continue;
     total++;
     if (!isNaN(parseFloat(v))) numeric++;
@@ -33,16 +35,23 @@ export function isNumericColumn(rows: string[][], hIndex: number): boolean {
 
 /** Min/max of a column's parsable numeric values. Returns `undefined` when none. */
 export function numericRange(
-  rows: string[][],
-  hIndex: number
+  rows: Row[],
+  key: string
 ): { min: number; max: number } | undefined {
-  const values = rows
-    .map((row) => parseFloat(row[hIndex] ?? ''))
-    .filter((n) => !isNaN(n));
+  let min = Infinity;
+  let max = -Infinity;
+  let any = false;
 
-  if (values.length === 0) return undefined;
+  for (const row of rows) {
+    const num = parseFloat(row[key] ?? '');
+    if (isNaN(num)) continue;
+    any = true;
+    if (num < min) min = num;
+    if (num > max) max = num;
+  }
 
-  return { min: Math.min(...values), max: Math.max(...values) };
+  if (!any) return undefined;
+  return { min, max };
 }
 
 if (import.meta.vitest) {
@@ -51,50 +60,47 @@ if (import.meta.vitest) {
   describe('isNumericColumn', () => {
     it('returns true when most cells are numbers', () => {
       const rows = [
-        ['a', '1'],
-        ['b', '2'],
-        ['c', '3.5'],
-        ['d', 'xx'],
+        { name: 'a', score: '1' },
+        { name: 'b', score: '2' },
+        { name: 'c', score: '3.5' },
+        { name: 'd', score: 'xx' },
       ];
-      expect(isNumericColumn(rows, 1)).toBe(true);
+      expect(isNumericColumn(rows, 'score')).toBe(true);
     });
 
     it('returns false when most cells are not numbers', () => {
       const rows = [
-        ['1', 'a'],
-        ['2', 'b'],
-        ['3', 'c'],
+        { name: '1', val: 'a' },
+        { name: '2', val: 'b' },
+        { name: '3', val: 'c' },
       ];
-      expect(isNumericColumn(rows, 1)).toBe(false);
+      expect(isNumericColumn(rows, 'val')).toBe(false);
     });
 
     it('ignores empty cells', () => {
       const rows = [
-        ['', ''],
-        ['', '1.0'],
-        ['', '2.0'],
+        { name: '', val: '' },
+        { name: '', val: '1.0' },
+        { name: '', val: '2.0' },
       ];
-      expect(isNumericColumn(rows, 1)).toBe(true);
+      expect(isNumericColumn(rows, 'val')).toBe(true);
     });
   });
 
   describe('numericRange', () => {
     it('returns min/max', () => {
       const rows = [
-        ['a', '5'],
-        ['b', '1'],
-        ['c', '9'],
-        ['d', 'x'],
+        { x: '5' },
+        { x: '1' },
+        { x: '9' },
+        { x: 'not a number' },
       ];
-      expect(numericRange(rows, 1)).toEqual({ min: 1, max: 9 });
+      expect(numericRange(rows, 'x')).toEqual({ min: 1, max: 9 });
     });
 
     it('returns undefined when no numbers', () => {
-      const rows = [
-        ['a', 'x'],
-        ['b', 'y'],
-      ];
-      expect(numericRange(rows, 1)).toBeUndefined();
+      const rows = [{ x: 'a' }, { x: 'b' }];
+      expect(numericRange(rows, 'x')).toBeUndefined();
     });
   });
 }

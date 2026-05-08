@@ -7,6 +7,8 @@ interface FormFilters {
   [column: string]: string | string[];
 }
 
+type Row = Record<string, string>;
+
 export class Filter {
   @tracked filters: undefined | FormFilters;
   clear = () => (this.filters = {});
@@ -34,45 +36,34 @@ export class Filter {
     this.filters = next;
   };
 
-  #dataFn: () => string[][];
-  #headerFn: () => string[];
+  #dataFn: () => Row[];
 
-  constructor(options: { data: () => string[][]; headers: () => string[] }) {
+  constructor(options: { data: () => Row[] }) {
     this.#dataFn = options.data;
-    this.#headerFn = options.headers;
   }
 
+  /**
+   * The full data set, exposed for callers that want to derive
+   * dropdown options. Filtering itself is intentionally _not_ applied
+   * here — the consumer hides non-matching rows in the DOM via
+   * {@link Filter.matchesRow} instead of rebuilding the row array on
+   * every filter change.
+   */
   @cached
-  private get incomingData() {
+  get data(): Row[] {
     return this.#dataFn();
   }
 
-  get headers() {
-    return this.#headerFn();
-  }
-
   /**
-   * The full source data, exposed for callers that want to derive
-   * dropdown options or do their own per-row matching with
-   * {@link Filter.matchesRow}. Filtering itself is intentionally _not_
-   * applied here — the consumer hides non-matching rows in the DOM
-   * instead of rebuilding the row array on every filter change.
-   */
-  get data() {
-    return this.incomingData;
-  }
-
-  /**
-   * Does `row` (a source row from `data`) pass the active filters?
+   * Does `row` pass the active filters?
    *
    * Each form field is keyed either by column name (multi-select
    * picker) or `<column>-search` (free-text search). An empty value
    * means "no constraint on that column".
    */
-  matchesRow(row: string[]): boolean {
+  matchesRow(row: Row): boolean {
     const filters = this.filters;
     if (!filters) return true;
-    const headers = this.headers;
 
     for (const [filterName, value] of Object.entries(filters)) {
       if (value.length === 0) continue;
@@ -80,14 +71,12 @@ export class Filter {
       if (filterName.endsWith('-search')) {
         if (Array.isArray(value)) continue; // not allowed
         const headerName = filterName.replace(/-search$/, '');
-        const hIndex = headers.indexOf(headerName);
-        if (!row[hIndex]?.includes(value)) return false;
+        if (!row[headerName]?.includes(value)) return false;
         continue;
       }
 
       if (!Array.isArray(value)) continue; // not allowed
-      const hIndex = headers.indexOf(filterName);
-      if (!value.some((v) => row[hIndex]?.includes(v))) return false;
+      if (!value.some((v) => row[filterName]?.includes(v))) return false;
     }
     return true;
   }
@@ -102,12 +91,10 @@ export class Filters extends Component<{
   id = guidFor(this);
 
   get options() {
-    const { column } = this.args;
-    const headers = this.args.filter.headers;
-    const rows = this.args.filter.data;
-    const index = headers.indexOf(column);
-
-    return new Set(rows.map((row) => row[index]?.trim()).filter(Boolean));
+    const { column, filter } = this.args;
+    return new Set(
+      filter.data.map((row) => row[column]?.trim()).filter(Boolean)
+    );
   }
 
   get hasOptions() {

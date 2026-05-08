@@ -13,7 +13,6 @@ import {
 } from '@universal-ember/table/plugins/column-visibility';
 import type { Column, Table } from '@universal-ember/table';
 
-import { indexFromKey } from '#utils/column-keys.ts';
 import type QPService from '#services/qp.ts';
 
 const DEFAULT_LOW = '#ff5252';
@@ -28,7 +27,8 @@ function inputValue(event: Event): string {
 export class Settings<T> extends Component<{
   Args: {
     table: Table<T>;
-    numericFlags: boolean[];
+    /** Whether `key` looks numeric — drives whether the color toggle shows. */
+    isNumeric: (key: string) => boolean;
   };
 }> {
   @service declare qp: QPService;
@@ -92,10 +92,7 @@ export class Settings<T> extends Component<{
     this.qp.conditionalValidations = [];
   };
 
-  isNumeric = (column: Column<T>) => {
-    const idx = indexFromKey(column.key);
-    return this.args.numericFlags[idx] ?? false;
-  };
+  isNumeric = (column: Column<T>) => this.args.isNumeric(column.key);
 
   <template>
     <Popover @placement="bottom-end" @offsetOptions={{8}} as |p|>
