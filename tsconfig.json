@@ -1,36 +1,6 @@
 {
-  "extends": "@tsconfig/ember/tsconfig.json",
-  "include": [
-    "app", "tests", "types"
-  ],
-  "glint": {
-    "environment": [
-      "ember-loose",
-      "ember-template-imports"
-    ]
-  },
+  "extends": "@ember/app-tsconfig",
   "compilerOptions": {
-    "allowJs": true,
-    /**
-      https://www.typescriptlang.org/tsconfig#noEmitOnError
-      Do not block emit on TS errors.
-    */
-    "noEmitOnError": false,
-
-    "declaration": false,
-    "declarationMap": false,
-
-    /**
-      https://www.typescriptlang.org/tsconfig#allowImportingTsExtensions
-
-      We want our tooling to know how to resolve our custom files so the appropriate plugins
-      can do the proper transformations on those files.
-    */
-    "allowImportingTsExtensions": true,
-
-    // stylistic
-    "noPropertyAccessFromIndexSignature": false,
-
     "paths": {
       "table-viewer/tests/*": [
         "./tests/*"
@@ -44,6 +14,8 @@
     },
     "types": [
       "ember-source/types",
+      "@glint/ember-tsc/types",
+      "@embroider/core/virtual",
       "vite/client",
       "vitest/importMeta"
     ]

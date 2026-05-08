@@ -24,7 +24,7 @@ class Form extends Component {
       const url = `/?file=${raw}&key=${data.key}`;
       this.router.transitionTo(url);
     } catch (e) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+       
       this.error = e.message;
     }
   };

@@ -18,17 +18,17 @@ export class DynamicTable extends Component<{
   @service declare qp: QPService;
 
   // Bug? this should be safe
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
   @link filter = new Filter({
     data: () => this.args.rows,
     headers: () => this.args.headers,
   });
 
   // Bug? this should be safe
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
   @link sorter = new Sorter({
     // Bug? this should be safe
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
+
     data: () => this.filter.data,
     headers: () => this.args.headers,
   });
@@ -63,28 +63,35 @@ export class DynamicTable extends Component<{
   #maxCache = {};
   #minCache = {};
   maxOf = (hIndex: number) => {
+    // @ts-expect-error
     if (this.#maxCache[hIndex]) return this.#maxCache[hIndex];
 
     const values = this.args.rows
       .map((row) => row[hIndex])
+      // @ts-expect-error
       .map((x) => parseFloat(x));
     return Math.max(...values);
   };
   minOf = (hIndex: number) => {
+    // @ts-expect-error
     if (this.#minCache[hIndex]) return this.#minCache[hIndex];
     const values = this.args.rows
       .map((row) => row[hIndex])
+      // @ts-expect-error
       .map((x) => parseFloat(x));
     return Math.min(...values);
   };
 
   #interpolationCache = {};
   getInterpolation(hIndex: number, end: string, start: string) {
+    // @ts-expect-error
     if (this.#interpolationCache[hIndex])
+      // @ts-expect-error
       return this.#interpolationCache[hIndex];
 
     const interpolation = interpolate([end, start], 'oklch');
 
+    // @ts-expect-error
     this.#interpolationCache[hIndex] = interpolation;
     return interpolation;
   }
