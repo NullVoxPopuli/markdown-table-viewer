@@ -2,6 +2,8 @@ import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { cached, tracked } from '@glimmer/tracking';
 
+import { compareValues } from '#utils/sort-rows.ts';
+
 interface FormFilters {
   [column: string]: string | string[];
 }
@@ -89,13 +91,14 @@ export class Filters extends Component<{
 }> {
   get options() {
     const { column, filter } = this.args;
-    return new Set(
+    const unique = new Set(
       filter.data.map((row) => row[column]?.trim()).filter(Boolean)
     );
+    return Array.from(unique).sort(compareValues);
   }
 
   get hasOptions() {
-    return this.options.size > 0;
+    return this.options.length > 0;
   }
 
   get isActive() {

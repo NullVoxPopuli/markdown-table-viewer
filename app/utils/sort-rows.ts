@@ -34,6 +34,29 @@ function asTimestamp(value: string): number | undefined {
   return isNaN(timestamp) ? undefined : timestamp;
 }
 
+/**
+ * Compare two cell values: chronologically when both look like dates,
+ * numerically when both parse as numbers, locale-aware string compare
+ * otherwise. Shared by row sorting and filter-option ordering.
+ */
+export function compareValues(a: string, b: string): number {
+  const ad = asTimestamp(a);
+  const bd = asTimestamp(b);
+
+  if (ad !== undefined && bd !== undefined) {
+    return ad - bd;
+  }
+
+  const af = parseFloat(a);
+  const bf = parseFloat(b);
+
+  if (!isNaN(af) && !isNaN(bf)) {
+    return af - bf;
+  }
+
+  return a.localeCompare(b);
+}
+
 export function compareRows<T extends Record<string, string>>(
   sorts: ReadonlyArray<SortItem<T>>
 ): (a: T, b: T) => number {
@@ -41,22 +64,7 @@ export function compareRows<T extends Record<string, string>>(
     for (const { property, direction } of sorts) {
       const av = a[property as keyof T] ?? '';
       const bv = b[property as keyof T] ?? '';
-      const ad = asTimestamp(av);
-      const bd = asTimestamp(bv);
-
-      let result: number;
-      if (ad !== undefined && bd !== undefined) {
-        result = ad - bd;
-      } else {
-        const af = parseFloat(av);
-        const bf = parseFloat(bv);
-
-        if (!isNaN(af) && !isNaN(bf)) {
-          result = af - bf;
-        } else {
-          result = av.localeCompare(bv);
-        }
-      }
+      const result = compareValues(av, bv);
 
       if (result !== 0) {
         return String(direction) === DESCENDING ? -result : result;
@@ -78,6 +86,26 @@ if (import.meta.vitest) {
   const desc = (k: keyof Row): SortItem<Row> => ({
     property: k,
     direction: 'descending' as Direction,
+  });
+
+  describe('compareValues', () => {
+    it('orders numbers numerically, not lexically', () => {
+      expect(['10', '2', '7'].sort(compareValues)).toEqual(['2', '7', '10']);
+    });
+
+    it('orders same-year dates chronologically', () => {
+      expect(
+        ['2026-11-30', '2026-01-15', '2026-03-02'].sort(compareValues)
+      ).toEqual(['2026-01-15', '2026-03-02', '2026-11-30']);
+    });
+
+    it('orders plain strings with a locale-aware compare', () => {
+      expect(['banana', 'apple', 'cherry'].sort(compareValues)).toEqual([
+        'apple',
+        'banana',
+        'cherry',
+      ]);
+    });
   });
 
   describe('compareRows', () => {
